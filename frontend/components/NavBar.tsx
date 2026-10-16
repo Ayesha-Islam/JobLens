@@ -66,7 +66,7 @@ export default function Navbar({
 
         <Link href="/" className="flex items-center gap-2 group">
           <span className="font-bold text-foreground text-xl tracking-tight hidden sm:block">
-            JobScraper
+            JobLens
           </span>
         </Link>
 
@@ -96,12 +96,12 @@ export default function Navbar({
                     )}
 
                   >
-                    Services
+                    Stats
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
 
-              <NavigationMenuItem>
+              {/* <NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <Link
                     href="/portfolio"
@@ -113,19 +113,21 @@ export default function Navbar({
                     Portfolio
                   </Link>
                 </NavigationMenuLink>
-              </NavigationMenuItem>
+              </NavigationMenuItem> */}
 
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
-                  <Link
-                    href="/documentation"
+                  <a
+                    href="https://github.com/Ayesha-Islam/Job-scraper/tree/main/docs"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className={cn(
                       navigationMenuTriggerStyle(),
                       "bg-transparent text-foreground hover:bg-popover/10 hover:text-foreground focus:bg-popover/10 focus:text-foreground"
                     )}
                   >
                     Documentation
-                  </Link>
+                  </a>
                 </NavigationMenuLink>
               </NavigationMenuItem>
             </NavigationMenuList>

@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+// @ts-ignore Next.js processes global CSS imports at build time.
 import "./globals.css";
 import SessionProvider from "@/components/SessionProvider";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/NavBar";
+import localFont from "next/font/local";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = localFont({
+  src: "./fonts/InterVariable.woff2",
+  variable: "--font-inter",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Remote Job Board - Find Your Dream Remote Job",
   description: "Discover remote job opportunities from top companies. Updated daily with the latest positions.",
@@ -18,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body
         className={`${inter.className} `}
       >

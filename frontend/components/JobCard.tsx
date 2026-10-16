@@ -121,7 +121,7 @@ export function JobCard({
           <CardContent className="space-y-3">
             <div className="flex flex-wrap gap-2">
               {job.location && (
-                <Badge variant="outline" className="bg-popover border-border">
+                <Badge variant="outline" className="bg-popover border-border text-muted-foreground">
                   <MapPin className="w-3 h-3 mr-1" />
                   {job.location}
                 </Badge>
@@ -171,7 +171,7 @@ export function JobCard({
                   window.open(job.url, '_blank', 'noopener,noreferrer');
                 }
               }}
-              className="w-full bg-background text-foreground hover:bg-popover hover:text-primary-foreground transition-colors"
+              className="w-full bg-background text-foreground hover:bg-popover hover:bg-primary hover:text-primary-foreground transition-colors"
             >
               Quick Apply
             </Button>

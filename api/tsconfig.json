@@ -38,7 +38,7 @@
   },
   "include": [
     "src/**/*"
-  ],
+, "scripts/benchmark-description-cleaning.ts", "scripts/compare-benchmark.mjs"  ],
   "exclude": [
     "node_modules",
     "dist",

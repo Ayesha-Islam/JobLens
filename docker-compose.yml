@@ -8,7 +8,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jobpass}
       POSTGRES_DB: ${POSTGRES_DB:-jobscraper}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      # Host-only: the api container reaches Postgres via the Docker network
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -23,7 +24,8 @@ services:
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      # Host-only: the api container reaches Redis via the Docker network
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -48,7 +50,8 @@ services:
       PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       ADMIN_EMAILS: ${ADMIN_EMAILS:?ADMIN_EMAILS must be set}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      # Must match the exact origin used in the browser (CORS)
+      FRONTEND_URL: http://${HOST_IP:-localhost}:3000
       DB_SSL: ${DB_SSL:-false}
     ports:
       - "3001:3001"
@@ -63,15 +66,19 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api/v1}
+        # Baked into the client bundle at build time: rebuild after changing HOST_IP
+        NEXT_PUBLIC_API_URL: http://${HOST_IP:-localhost}:3001/api/v1
     container_name: job-scraper-frontend
     restart: unless-stopped
     environment:
       NODE_ENV: production
       PORT: 3000
       AUTH_TRUST_HOST: "true"
-      NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
+      # Auth.js v5 reads AUTH_URL; NextAuth v4 reads NEXTAUTH_URL
+      AUTH_URL: http://${HOST_IP:-localhost}:3000
+      NEXTAUTH_URL: http://${HOST_IP:-localhost}:3000
+      NEXT_PUBLIC_API_URL: http://${HOST_IP:-localhost}:3001/api/v1
+      # Container-to-container traffic: always the service name, never HOST_IP
       INTERNAL_API_URL: http://api:3001/api/v1
       AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET must be set}
       NEXTAUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET must be set}

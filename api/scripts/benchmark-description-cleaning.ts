@@ -1,6 +1,23 @@
+import { createHash } from 'node:crypto';
 import os from 'node:os';
 import { performance } from 'node:perf_hooks';
 import { cleanDescription } from '../src/services/job.processor';
+
+const messyHtml = `
+  <div class="description" style="color:#333">
+    <style>.hidden{display:none}</style>
+    <script>window.__DATA__ = {"id": 123, "tracking": "abc"};</script>
+    <p><b>Senior Backend Engineer</b> &amp; Platform Team &nbsp;|&nbsp; Remote</p>
+    <div><div><div><span>Responsibilities</span></div></div></div>
+    <ul>
+      <li>Design &amp; build REST APIs in TypeScript</li>
+      <li>Own PostgreSQL schema changes &amp; query tuning</li>
+      <li>Mentor engineers&nbsp;&nbsp;and review pull requests</li>
+    </ul>
+    <a href="https://example.com/apply?utm_source=x&amp;utm_medium=y">Apply now</a>
+    <p>Equal opportunity employer. Cookie settings. Share this job on Facebook, X, LinkedIn.</p>
+  </div>
+`;
 
 const samples = [
   `
@@ -32,9 +49,11 @@ const samples = [
     What you will bring
     TypeScript, Node.js, SQL, testing, and clear written communication.
   `,
+  messyHtml,
+  Array.from({ length: 40 }, () => messyHtml).join('\n'), // large input
 ];
 
-const iterationsPerRound = 25_000;
+const iterationsPerRound = 6_000; // multiple of samples.length so the mix is even
 const measuredRounds = 8;
 
 function runRound(iterations: number): { elapsedMs: number; checksum: number } {
@@ -45,24 +64,32 @@ function runRound(iterations: number): { elapsedMs: number; checksum: number } {
     checksum += cleanDescription(samples[index % samples.length]).length;
   }
 
-  return {
-    elapsedMs: performance.now() - start,
-    checksum,
-  };
+  return { elapsedMs: performance.now() - start, checksum };
 }
 
 // Warm up the JIT before collecting timings.
-runRound(10_000);
+runRound(1_200);
 
 const rounds = Array.from({ length: measuredRounds }, () =>
   runRound(iterationsPerRound)
 );
+
+if (new Set(rounds.map((round) => round.checksum)).size !== 1) {
+  throw new Error('cleanDescription is non-deterministic: checksums differ between rounds');
+}
+
+// Hash of the actual cleaned output (computed once, outside the timed loop).
+const outputHash = createHash('sha256')
+  .update(samples.map((sample) => cleanDescription(sample)).join('\u0000'))
+  .digest('hex')
+  .slice(0, 16);
+
 const sortedMs = rounds.map((round) => round.elapsedMs).sort((a, b) => a - b);
 const medianMs =
   (sortedMs[measuredRounds / 2 - 1] + sortedMs[measuredRounds / 2]) / 2;
-const operationsPerSecond = Math.round(
-  iterationsPerRound / (medianMs / 1_000)
-);
+const minMs = sortedMs[0];
+const maxMs = sortedMs[sortedMs.length - 1];
+const operationsPerSecond = Math.round(iterationsPerRound / (medianMs / 1_000));
 
 console.log(
   JSON.stringify(
@@ -76,8 +103,12 @@ console.log(
       iterationsPerRound,
       measuredRounds,
       medianRoundMs: Number(medianMs.toFixed(2)),
+      minRoundMs: Number(minMs.toFixed(2)),
+      maxRoundMs: Number(maxMs.toFixed(2)),
+      spreadPct: Number((((maxMs - minMs) / medianMs) * 100).toFixed(1)),
       operationsPerSecond,
       checksum: rounds[0].checksum,
+      outputHash,
       scope:
         'CPU-only description cleanup; excludes network, browser, database, and cache latency',
     },

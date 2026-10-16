@@ -11,6 +11,8 @@
     "start": "tsx src/index.ts",
     "scrape": "tsx src/scrape.ts",
     "benchmark:descriptions": "node --import tsx scripts/benchmark-description-cleaning.ts",
+    "benchmark:descriptions:save": "npm run -s benchmark:descriptions > benchmark-baseline.json",
+    "benchmark:descriptions:check": "npm run -s benchmark:descriptions > benchmark-current.json && node scripts/compare-benchmark.mjs benchmark-baseline.json benchmark-current.json 15",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",

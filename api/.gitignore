@@ -26,3 +26,5 @@ prisma/*.db-journal
 *.swp
 *.swo
 *~
+benchmark-current.json
+benchmark-baseline.json

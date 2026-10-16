@@ -31,8 +31,15 @@ export function Landing({ onGetStarted, onBrowseJobs }: LandingProps) {
   return (
     <div className="min-h-screen  bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-4xl">
+        <div className="text-center">
+          <p className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+            Find opportunities that
+            <br />move your career forward.
+          </p>
+        </div>
         <Card className="bg-transparent border-0 shadow-none">
           <CardContent className="p-8 md:p-12">
+
             <form onSubmit={handleSearch} className="mb-8">
               <div className="relative max-w-2xl mx-auto">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -50,7 +57,7 @@ export function Landing({ onGetStarted, onBrowseJobs }: LandingProps) {
                 />
                 <Button
                   type="submit"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full bg-background hover:bg-primary text-foreground px-6"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full bg-background hover:bg-primary hover:text-primary-foreground text-foreground px-6"
                   size="lg"
                 >
                   Search
@@ -59,15 +66,11 @@ export function Landing({ onGetStarted, onBrowseJobs }: LandingProps) {
             </form>
 
             <div className="text-center space-y-6">
-              <p className="text-foreground text-base">
-                Create an account or sign in to get<br />
-                your personalized job recommendations
-              </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Button
                   onClick={handleGetStarted}
                   size="lg"
-                  className="bg-card hover:bg-primary text-foreground text-lg rounded-full shadow-lg hover:shadow-xl transition-all"
+                  className="bg-card hover:bg-primary hover:text-primary-foreground text-foreground text-lg rounded-full shadow-lg hover:shadow-xl transition-all"
                 >
                   Get Started
                   <ArrowRight className="ml-2 h-5 w-5" />

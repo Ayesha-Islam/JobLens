@@ -2,7 +2,7 @@ import { ArrowRight, Briefcase } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className=" py-12 px-6 bg-background text-foreground">
+    <footer className="py-12 px-6 bg-foreground text-background">
       <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
         <div>
           <h3 className="font-bold mb-4">Get the latest update</h3>
@@ -11,7 +11,7 @@ export default function Footer() {
           </a>
         </div>
         <div>
-          <h3 className="font-bold mb-4">JobScraper & Co.</h3>
+          <h3 className="font-bold mb-4">JobLens & Co.</h3>
           <ul className="space-y-2">
             <li><a href="#" className="hover:text-primary-foreground">Discover Jobs</a></li>
             <li><a href="#" className="hover:text-primary-foreground">Help Center</a></li>
@@ -33,10 +33,10 @@ export default function Footer() {
           <div className="w-6 h-6 bg-card rounded flex items-center justify-center">
             <Briefcase className="w-4 h-4 text-foreground" />
           </div>
-          <span className="font-bold ">JobScraper & Co.</span>
+          <span className="font-bold ">JobLens & Co.</span>
         </div>
         <div className="text-sm">
-          © 2026 JobScraper & Co. All rights reserved.
+          © 2026 JobLens & Co. All rights reserved.
         </div>
       </div>
     </footer>
