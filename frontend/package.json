@@ -1,7 +1,7 @@
 {
-  "name": "job-scraper-frontend",
+  "name": "jobLens-frontend",
   "version": "1.0.0",
-  "description": "Job scraper frontend application built with Next.js",
+  "description": "JobLens frontend application built with Next.js",
   "private": true,
   "scripts": {
     "dev": "next dev",

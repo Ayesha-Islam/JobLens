@@ -65,10 +65,10 @@ npm test
 
 Repository evidence:
 
-- [`e9ec743`: remove description noise and handle missing content](https://github.com/Ayesha-Islam/Job-scraper/commit/e9ec74380f8e3f0bbad07f6c6e0e4ab3228976ef)
-- [`99b6567`: centralize enrichment and validation](https://github.com/Ayesha-Islam/Job-scraper/commit/99b6567776cfa3a640f18c479bac1bbdb95fe68f)
-- [`cbc8e6f`: harden source-specific extraction](https://github.com/Ayesha-Islam/Job-scraper/commit/cbc8e6f16d97612a2a03c90e5730ef77b7f41562)
-- [Processor regression tests](https://github.com/Ayesha-Islam/Job-scraper/blob/main/api/tests/unit/job.processor.test.ts)
+- [`e9ec743`: remove description noise and handle missing content](https://github.com/Ayesha-Islam/JobLens/commit/e9ec74380f8e3f0bbad07f6c6e0e4ab3228976ef)
+- [`99b6567`: centralize enrichment and validation](https://github.com/Ayesha-Islam/JobLens/commit/99b6567776cfa3a640f18c479bac1bbdb95fe68f)
+- [`cbc8e6f`: harden source-specific extraction](https://github.com/Ayesha-Islam/JobLens/commit/cbc8e6f16d97612a2a03c90e5730ef77b7f41562)
+- [Processor regression tests](https://github.com/Ayesha-Islam/JobLens/blob/main/api/tests/unit/job.processor.test.ts)
 
 ## Remaining limits
 

@@ -2,7 +2,7 @@
 
 ## Summary
 
-JobScraper uses a two-layer authentication flow:
+JobLens uses a two-layer authentication flow:
 
 1. The Express API validates credentials and issues a backend JWT.
 2. The Next.js frontend uses NextAuth Credentials to hold that JWT inside its own JWT-backed session.

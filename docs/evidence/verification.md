@@ -16,15 +16,15 @@ service-level guarantee.
 | Documentation links | 21 files checked; no broken relative links | Local link checker |
 
 The test-suite foundation was introduced in
-[`a1bf17d`](https://github.com/Ayesha-Islam/Job-scraper/commit/a1bf17d30d3d64d69e8d5a8c4bd737f8db26ef3f).
+[`a1bf17d`](https://github.com/Ayesha-Islam/JobLens/commit/a1bf17d30d3d64d69e8d5a8c4bd737f8db26ef3f).
 Current test files include:
 
-- [processor regression tests](https://github.com/Ayesha-Islam/Job-scraper/blob/main/api/tests/unit/job.processor.test.ts);
-- [deduplication and persistence tests](https://github.com/Ayesha-Islam/Job-scraper/blob/main/api/tests/unit/job.svc.test.ts);
-- [SQL construction tests](https://github.com/Ayesha-Islam/Job-scraper/blob/main/api/tests/unit/job.sql.test.ts);
-- [scraper orchestration tests](https://github.com/Ayesha-Islam/Job-scraper/blob/main/api/tests/unit/scrape.test.ts);
-- [API route integration tests](https://github.com/Ayesha-Islam/Job-scraper/blob/main/api/tests/integration/api.routes.test.ts);
-- [admin authorization integration tests](https://github.com/Ayesha-Islam/Job-scraper/blob/main/api/tests/integration/admin.api.test.ts).
+- [processor regression tests](https://github.com/Ayesha-Islam/JobLens/blob/main/api/tests/unit/job.processor.test.ts);
+- [deduplication and persistence tests](https://github.com/Ayesha-Islam/JobLens/blob/main/api/tests/unit/job.svc.test.ts);
+- [SQL construction tests](https://github.com/Ayesha-Islam/JobLens/blob/main/api/tests/unit/job.sql.test.ts);
+- [scraper orchestration tests](https://github.com/Ayesha-Islam/JobLens/blob/main/api/tests/unit/scrape.test.ts);
+- [API route integration tests](https://github.com/Ayesha-Islam/JobLens/blob/main/api/tests/integration/api.routes.test.ts);
+- [admin authorization integration tests](https://github.com/Ayesha-Islam/JobLens/blob/main/api/tests/integration/admin.api.test.ts).
 
 These tests use mocks and fixtures. They verify application behavior, not the
 continued availability or markup stability of external providers.
@@ -33,7 +33,7 @@ continued availability or markup stability of external providers.
 
 The repository history contains an actual JSON export captured on 26 February
 2026 and committed with the description-cleanup work in
-[`e9ec743`](https://github.com/Ayesha-Islam/Job-scraper/commit/e9ec74380f8e3f0bbad07f6c6e0e4ab3228976ef).
+[`e9ec743`](https://github.com/Ayesha-Islam/JobLens/commit/e9ec74380f8e3f0bbad07f6c6e0e4ab3228976ef).
 
 Only aggregate values are reproduced here. Job titles, company names,
 application URLs, descriptions, and tracking values are deliberately omitted.
@@ -106,11 +106,11 @@ included. The project deliberately makes no “high-performance search” claim.
 
 | Engineering claim | Repository evidence |
 |---|---|
-| Description noise and null content required cleanup | [`e9ec743`](https://github.com/Ayesha-Islam/Job-scraper/commit/e9ec74380f8e3f0bbad07f6c6e0e4ab3228976ef) |
-| Enrichment, validation, and persistence were centralized | [`99b6567`](https://github.com/Ayesha-Islam/Job-scraper/commit/99b6567776cfa3a640f18c479bac1bbdb95fe68f) |
-| Description extraction received source-specific hardening | [`cbc8e6f`](https://github.com/Ayesha-Islam/Job-scraper/commit/cbc8e6f16d97612a2a03c90e5730ef77b7f41562) |
-| `runOne()` was separated from all-provider execution | [`e56bbf5`](https://github.com/Ayesha-Islam/Job-scraper/commit/e56bbf5d967c64725b7459da9060772139854420), [`59eaaac`](https://github.com/Ayesha-Islam/Job-scraper/commit/59eaaac86d6111d8e1a8e0edfd86309f41f74b79) |
-| Database uniqueness and API test coverage were committed | [`a1bf17d`](https://github.com/Ayesha-Islam/Job-scraper/commit/a1bf17d30d3d64d69e8d5a8c4bd737f8db26ef3f) |
+| Description noise and null content required cleanup | [`e9ec743`](https://github.com/Ayesha-Islam/JobLens/commit/e9ec74380f8e3f0bbad07f6c6e0e4ab3228976ef) |
+| Enrichment, validation, and persistence were centralized | [`99b6567`](https://github.com/Ayesha-Islam/JobLens/commit/99b6567776cfa3a640f18c479bac1bbdb95fe68f) |
+| Description extraction received source-specific hardening | [`cbc8e6f`](https://github.com/Ayesha-Islam/JobLens/commit/cbc8e6f16d97612a2a03c90e5730ef77b7f41562) |
+| `runOne()` was separated from all-provider execution | [`e56bbf5`](https://github.com/Ayesha-Islam/JobLens/commit/e56bbf5d967c64725b7459da9060772139854420), [`59eaaac`](https://github.com/Ayesha-Islam/JobLens/commit/59eaaac86d6111d8e1a8e0edfd86309f41f74b79) |
+| Database uniqueness and API test coverage were committed | [`a1bf17d`](https://github.com/Ayesha-Islam/JobLens/commit/a1bf17d30d3d64d69e8d5a8c4bd737f8db26ef3f) |
 
 Commit messages describe the intended changes. The automated checks above are
 the stronger evidence that the reviewed working tree still builds and passes.

@@ -51,10 +51,10 @@ necessary for selectors and network behavior.
 
 Repository evidence:
 
-- [`e56bbf5`: prevent one-source execution from triggering every scraper](https://github.com/Ayesha-Islam/Job-scraper/commit/e56bbf5d967c64725b7459da9060772139854420)
-- [`59eaaac`: isolate `runOne()` and stabilize database-pool behavior](https://github.com/Ayesha-Islam/Job-scraper/commit/59eaaac86d6111d8e1a8e0edfd86309f41f74b79)
-- [Scraper orchestration tests](https://github.com/Ayesha-Islam/Job-scraper/blob/main/api/tests/unit/scrape.test.ts)
-- [Admin route integration tests](https://github.com/Ayesha-Islam/Job-scraper/blob/main/api/tests/integration/admin.api.test.ts)
+- [`e56bbf5`: prevent one-source execution from triggering every scraper](https://github.com/Ayesha-Islam/JobLens/commit/e56bbf5d967c64725b7459da9060772139854420)
+- [`59eaaac`: isolate `runOne()` and stabilize database-pool behavior](https://github.com/Ayesha-Islam/JobLens/commit/59eaaac86d6111d8e1a8e0edfd86309f41f74b79)
+- [Scraper orchestration tests](https://github.com/Ayesha-Islam/JobLens/blob/main/api/tests/unit/scrape.test.ts)
+- [Admin route integration tests](https://github.com/Ayesha-Islam/JobLens/blob/main/api/tests/integration/admin.api.test.ts)
 
 ## Remaining limits
 

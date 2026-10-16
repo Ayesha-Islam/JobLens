@@ -1,6 +1,6 @@
-# JobScraper
+# JobLens
 
-JobScraper is a full-stack remote-job aggregator built around a data-quality
+JobLens is a full-stack remote-job aggregator built around a data-quality
 problem: different job boards describe the same vacancy in incompatible and
 sometimes unreliable ways.
 
@@ -15,7 +15,7 @@ A scraper can return HTML and still produce bad data. Real extraction output
 included missing descriptions, authentication walls, navigation text, unstable
 URLs, and the same role published through different sources.
 
-JobScraper addresses that boundary explicitly:
+JobLens addresses that boundary explicitly:
 
 ```text
 Provider extraction

@@ -1,7 +1,7 @@
 {
-  "name": "job-scraper-api",
+  "name": "jobLens-api",
   "version": "1.0.0",
-  "description": "API package for job-scraper",
+  "description": "API package for jobLens",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -22,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Ayesha-Islam/Job-scraper"
+    "url": "https://github.com/Ayesha-Islam/JobLens"
   },
   "author": "",
   "license": "ISC",

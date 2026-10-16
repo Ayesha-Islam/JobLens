@@ -94,31 +94,16 @@ export default function Navbar({
                       navigationMenuTriggerStyle(),
                       "bg-transparent text-foreground hover:bg-popover/10 hover:text-foreground focus:bg-popover/10 focus:text-foreground"
                     )}
-
                   >
                     Stats
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
 
-              {/* <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link
-                    href="/portfolio"
-                    className={cn(
-                      navigationMenuTriggerStyle(),
-                      "bg-transparent text-foreground hover:bg-popover/10 hover:text-foreground focus:bg-popover/10 focus:text-foreground"
-                    )}
-                  >
-                    Portfolio
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem> */}
-
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <a
-                    href="https://github.com/Ayesha-Islam/Job-scraper/tree/main/docs"
+                    href="https://github.com/Ayesha-Islam/JobLens/tree/main/docs"
                     target="_blank"
                     rel="noopener noreferrer"
                     className={cn(

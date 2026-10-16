@@ -1,8 +1,8 @@
-# Case Study: Building JobScraper as a Data-Quality Pipeline
+# Case Study: Building JobLens as a Data-Quality Pipeline
 
 ## Project summary
 
-JobScraper collects remote software-engineering vacancies from multiple public job sources and exposes them through an Express API and Next.js interface.
+JobLens collects remote software-engineering vacancies from multiple public job sources and exposes them through an Express API and Next.js interface.
 
 The difficult part was not downloading pages. It was deciding which extracted records were trustworthy enough to persist.
 
@@ -58,7 +58,7 @@ See [Ingestion and data quality](architecture/ingestion-and-data-quality.md).
 
 Provider URLs cannot identify a vacancy across sources. The same role may appear on a company page, a job board, and an aggregator with three different URLs.
 
-JobScraper derives:
+JobLens derives:
 
 ```text
 companyKey + positionKey + locationKey

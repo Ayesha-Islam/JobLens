@@ -6,55 +6,52 @@ export class CacheService {
   private client: Redis | null = null;
   private isConnected = false;
 
-  constructor() {
-
-    try {
-      if (env.REDIS_URL) {
-        this.client = new Redis(env.REDIS_URL, {
-          maxRetriesPerRequest: 3,
-          enableReadyCheck: true,
-          lazyConnect: true,
-        });
-      } else {
-        this.client = new Redis({
-          host: env.REDIS_HOST,
-          port: parseInt(env.REDIS_PORT, 10),
-          ...(env.REDIS_PASSWORD
-            ? { password: env.REDIS_PASSWORD }
-            : {}),
-          maxRetriesPerRequest: 3,
-          enableReadyCheck: true,
-          lazyConnect: true,
-        });
-      }
-      
-      this.client.on('error', (err) => {
-        console.error(chalk.red('❌ Redis error:'), err);
-        this.isConnected = false;
-      });
-
-      this.client.on('connect', () => {
-        console.log(chalk.green('✓ Redis connected'));
-        this.isConnected = true;
-      });
-
-      this.client.on('ready', () => {
-        this.isConnected = true;
-      });
-
-      this.client.on('close', () => {
-        console.log(chalk.yellow('⚠️  Redis connection closed'));
-        this.isConnected = false;
-      });
-
-      this.client.on('end', () => {
-        this.isConnected = false;
-      });
-    } catch (error) {
-      console.error(chalk.red('❌ Redis initialization failed:'), error);
-      this.client = null;
-    }
+ constructor() {
+  if (!env.REDIS_URL) {
+    throw new Error(
+      'REDIS_URL is required. Configure your Upstash Redis connection URL.'
+    );
   }
+
+  try {
+    this.client = new Redis(env.REDIS_URL, {
+      maxRetriesPerRequest: 3,
+      enableReadyCheck: true,
+      lazyConnect: true,
+    });
+
+    this.client.on('error', (err) => {
+      console.error(chalk.red('❌ Redis error:'), err);
+      this.isConnected = false;
+    });
+
+    this.client.on('connect', () => {
+      console.log(chalk.green('✓ Redis connected'));
+      this.isConnected = true;
+    });
+
+    this.client.on('ready', () => {
+      this.isConnected = true;
+    });
+
+    this.client.on('close', () => {
+      console.log(chalk.yellow('⚠️ Redis connection closed'));
+      this.isConnected = false;
+    });
+
+    this.client.on('end', () => {
+      this.isConnected = false;
+    });
+  } catch (error) {
+    console.error(
+      chalk.red('❌ Redis initialization failed:'),
+      error
+    );
+
+    this.client = null;
+    throw error;
+  }
+}
 
   async connect(): Promise<void> {
     if (!this.client) {

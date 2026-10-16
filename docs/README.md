@@ -1,6 +1,6 @@
-# JobScraper Documentation
+# JobLens Documentation
 
-JobScraper is a full-stack remote-job aggregator built around a data-quality problem: different job boards describe the same vacancy in incompatible and sometimes unreliable ways.
+JobLens is a full-stack remote-job aggregator built around a data-quality problem: different job boards describe the same vacancy in incompatible and sometimes unreliable ways.
 
 The documentation is organized by reader need. Start with the case study for the project story, use architecture pages to understand the system, follow guides to complete tasks, and use reference pages for exact contracts.
 

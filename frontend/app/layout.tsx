@@ -13,9 +13,19 @@ const inter = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Remote Job Board - Find Your Dream Remote Job",
-  description: "Discover remote job opportunities from top companies. Updated daily with the latest positions.",
-  keywords: ["remote jobs", "work from home", "remote work", "job board"],
+  title: "Remote Jobs | Find Your Next Career Opportunity",
+  description:
+    "Explore the latest remote job opportunities from leading companies. Discover work-from-home and fully remote positions that match your skills, and take the next step in your career.",
+  keywords: [
+    "remote jobs",
+    "remote job board",
+    "work from home jobs",
+    "fully remote jobs",
+    "remote career opportunities",
+    "online jobs",
+    "remote work",
+    "work from anywhere",
+  ],
 };
 
 export default function RootLayout({

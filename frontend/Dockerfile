@@ -21,5 +21,8 @@ COPY --from=build /app/package*.json ./
 COPY --from=build /app/.next ./.next
 COPY --from=deps /app/node_modules ./node_modules
 
+ENV HOSTNAME="0.0.0.0"
+
 EXPOSE 3000
-CMD ["npm", "start"]
+
+CMD ["npm", "run", "start"]

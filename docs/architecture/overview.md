@@ -1,6 +1,6 @@
 # Architecture overview
 
-Job Scraper is a two-application TypeScript system backed by PostgreSQL and
+JobLens is a two-application TypeScript system backed by PostgreSQL and
 Redis:
 
 - `api/` collects, normalizes, stores, and serves jobs.

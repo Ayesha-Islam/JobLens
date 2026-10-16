@@ -56,9 +56,9 @@ handling, and update behavior.
 
 Repository evidence:
 
-- [`a1bf17d`: commit the composite uniqueness migration and test suite](https://github.com/Ayesha-Islam/Job-scraper/commit/a1bf17d30d3d64d69e8d5a8c4bd737f8db26ef3f)
-- [Persistence and deduplication tests](https://github.com/Ayesha-Islam/Job-scraper/blob/main/api/tests/unit/job.svc.test.ts)
-- [Composite-key migration](https://github.com/Ayesha-Islam/Job-scraper/blob/main/api/prisma/migrations/20260607191600_semantic_dedup/migration.sql)
+- [`a1bf17d`: commit the composite uniqueness migration and test suite](https://github.com/Ayesha-Islam/JobLens/commit/a1bf17d30d3d64d69e8d5a8c4bd737f8db26ef3f)
+- [Persistence and deduplication tests](https://github.com/Ayesha-Islam/JobLens/blob/main/api/tests/unit/job.svc.test.ts)
+- [Composite-key migration](https://github.com/Ayesha-Islam/JobLens/blob/main/api/prisma/migrations/20260607191600_semantic_dedup/migration.sql)
 
 The migration retains its historical `semantic_dedup` directory name. The
 implemented algorithm is deterministic key matching, not semantic similarity.

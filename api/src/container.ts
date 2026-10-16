@@ -1,5 +1,4 @@
 import { env, pool, type Env } from './config';
-import IORedis from 'ioredis';
 import { Pool } from 'pg';
 import { HealthController } from './controllers/health.controller';
 import { JobController } from './controllers/job.controller';
@@ -25,23 +24,10 @@ export class Container {
   private _adminController: AdminController;
 
   public readonly env: Env;
-  // public readonly redis: IORedis;
 
   private constructor() {
     console.log(chalk.cyan('🔧 Initializing Container...'));
     this.env = env;
-
-    // this.redis = new IORedis({
-    //   host: env.REDIS_HOST,
-    //   port: parseInt(env.REDIS_PORT, 10),
-    //   ...(env.REDIS_PASSWORD ? { password: env.REDIS_PASSWORD } : {}),
-    //   retryStrategy: (times: number) => Math.min(times * 50, 2000),
-    //   maxRetriesPerRequest: 3,
-    // });
-
-    // this.redis.on('connect', () => console.log('✅ Redis connected'));
-    // this.redis.on('error',   (err: any) => console.error('❌ Redis error:', err));
-
     this._db   = db;
     this._pool = pool;
 

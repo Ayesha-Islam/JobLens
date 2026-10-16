@@ -204,7 +204,7 @@ export function BrowseJobs({
                     onClick={() =>
                       setViewMode((current) => current === 'grid' ? 'masonry' : 'grid')
                     }
-                    className="h-11 w-11 bg-background text-foreground hover:bg-primary"
+                    className="h-11 w-11 bg-background text-foreground hover:bg-primary hover:text-background transition-colors"
                   >
                     {viewMode === 'grid' ? (
                       <LayoutGrid className="h-4 w-4" />
