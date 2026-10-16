@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import os from 'node:os';
 import { performance } from 'node:perf_hooks';
-import { cleanDescription } from '../src/services/job.processor';
+import { cleanDescription } from '../services/job.processor';
 
 const messyHtml = `
   <div class="description" style="color:#333">

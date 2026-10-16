@@ -5,7 +5,6 @@
     "types": [
       "node"
     ],
-    "baseUrl": ".",
     "lib": [
       "ES2022",
       "dom"
@@ -38,7 +37,7 @@
   },
   "include": [
     "src/**/*"
-, "scripts/benchmark-description-cleaning.ts", "scripts/compare-benchmark.mjs"  ],
+, "src/scripts"  ],
   "exclude": [
     "node_modules",
     "dist",

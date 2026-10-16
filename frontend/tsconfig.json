@@ -32,7 +32,6 @@
     "noImplicitThis": true,
     "alwaysStrict": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./*"

@@ -7,7 +7,7 @@ import Navbar from "@/components/NavBar";
 import localFont from "next/font/local";
 
 const inter = localFont({
-  src: "./fonts/InterVariable.woff2",
+  src: "./public/fonts/InterVariable.woff2",
   variable: "--font-inter",
   display: "swap",
 });

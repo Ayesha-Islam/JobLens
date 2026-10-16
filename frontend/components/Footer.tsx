@@ -2,7 +2,7 @@ import { ArrowRight, Briefcase } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="py-12 px-6 bg-foreground text-background">
+    <footer className="py-12 px-6 bg-background text-foreground">
       <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
         <div>
           <h3 className="font-bold mb-4">Get the latest update</h3>

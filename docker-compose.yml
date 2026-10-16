@@ -44,9 +44,7 @@ services:
       NODE_ENV: production
       PORT: 3001
       DATABASE_URL: postgresql://${POSTGRES_USER:-jobuser}:${POSTGRES_PASSWORD:-jobpass}@postgres:5432/${POSTGRES_DB:-jobscraper}?schema=public
-      REDIS_URL: redis://redis:6379
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      REDIS_URL: ${REDIS_URL}
       PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       ADMIN_EMAILS: ${ADMIN_EMAILS:?ADMIN_EMAILS must be set}

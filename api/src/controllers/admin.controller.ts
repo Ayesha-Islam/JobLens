@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { Container } from '../container';
 import chalk from 'chalk';
 import { ApiResponse } from '../types';
-import { ScraperManager } from 'src/scrape';
+import { ScraperManager } from '../scrape';
 
 export class AdminController {
   constructor(private container: Container) { }

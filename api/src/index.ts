@@ -15,7 +15,7 @@ async function startServer() {
     setupScheduler();
     console.log(chalk.green('✓ Scheduler initialized'));
 
-    const server = app.listen(PORT, () => {
+    const server = app.listen(Number(PORT), '0.0.0.0', () => {
       console.log(chalk.green(`✓ Server running on port ${PORT}`));
       console.log(chalk.cyan(`   http://localhost:${PORT}`));
       console.log(chalk.cyan(`   Health: http://localhost:${PORT}/api/v1/health`));
