@@ -15,7 +15,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       ADMIN_EMAILS: ${ADMIN_EMAILS:?ADMIN_EMAILS must be set}
       # Must match the exact origin used in the browser (CORS)
-      FRONTEND_URL: http://${HOST_IP:-localhost}:3000
+      FRONTEND_URL: https://job-lens-gules.vercel.app/
       DB_SSL: ${DB_SSL:-false}
     ports:
       - "3001:3001"
@@ -34,8 +34,8 @@ services:
       PORT: 3000
       AUTH_TRUST_HOST: "true"
       # Auth.js v5 reads AUTH_URL; NextAuth v4 reads NEXTAUTH_URL
-      AUTH_URL: http://${HOST_IP:-localhost}:3000
-      NEXTAUTH_URL: http://${HOST_IP:-localhost}:3000
+      AUTH_URL: https://job-lens-gules.vercel.app/
+      NEXTAUTH_URL: https://job-lens-gules.vercel.app/
       NEXT_PUBLIC_API_URL: http://${HOST_IP:-localhost}:3001/api/v1
       # Container-to-container traffic: always the service name, never HOST_IP
       INTERNAL_API_URL: http://api:3001/api/v1
