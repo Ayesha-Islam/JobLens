@@ -133,7 +133,7 @@ export function BrowseJobs({
           <div className="text-center mb-6">
             <h1 className="text-6xl text-foreground font-bold mb-2">Browse All Jobs</h1>
             <p className="text-sm text-foreground">
-              Explore all available roles or discover curated AI recommendations
+              Discover new opportunities or find the perfect role for you.
             </p>
             {totalJobs > 0 && (
               <Badge variant="secondary" className="mt-2 bg-card text-foreground hover:bg-primary">
