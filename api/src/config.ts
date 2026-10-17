@@ -8,16 +8,13 @@ export interface Env {
   PORT: string;
   DATABASE_URL: string;
   REDIS_URL?: string;
-  ANTHROPIC_API_KEY?: string;
-  RESEND_API_KEY?: string;
-  ALERT_EMAIL?: string;
-  FROM_EMAIL?: string;
   DB_POOL_MAX?: string;
   DB_POOL_IDLE_TIMEOUT_MS?: string;
   DB_POOL_CONNECTION_TIMEOUT_MS?: string;
   DB_SSL?: string;
   JWT_SECRET: string;
   ADMIN_EMAILS?: string;
+  ENABLE_SCHEDULAR: boolean;
 }
 
 const missing = (key: string): never => {
@@ -29,11 +26,7 @@ export const env: Env = {
   PORT: process.env.PORT ?? '3001',
   DATABASE_URL: process.env.DATABASE_URL ?? missing('DATABASE_URL'),
   REDIS_URL: process.env.REDIS_URL,
-  ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
-  RESEND_API_KEY: process.env.RESEND_API_KEY,
-  ALERT_EMAIL: process.env.ALERT_EMAIL,
-  FROM_EMAIL: process.env.FROM_EMAIL,
-
+  ENABLE_SCHEDULAR: process.env.ENABLE_SCHEDULAR === 'true',
   DB_POOL_MAX: process.env.DB_POOL_MAX,
   DB_POOL_IDLE_TIMEOUT_MS: process.env.DB_POOL_IDLE_TIMEOUT_MS,
   DB_POOL_CONNECTION_TIMEOUT_MS: process.env.DB_POOL_CONNECTION_TIMEOUT_MS,
@@ -51,9 +44,11 @@ const parseNumber = (
 };
 
 const isPrismaHostedDb = env.DATABASE_URL.includes('db.prisma.io');
+const isNeonDb = new URL(env.DATABASE_URL).hostname.endsWith('.neon.tech');
 
 const shouldUseSsl =
   isPrismaHostedDb ||
+  isNeonDb ||
   env.DB_SSL === 'true' ||
   env.DB_SSL === '1';
 
@@ -61,7 +56,7 @@ export const pool = new Pool({
   connectionString: env.DATABASE_URL,
 
   ssl: shouldUseSsl
-    ? { rejectUnauthorized: false }
+    ? true
     : false,
 
   max: parseNumber(

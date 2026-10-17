@@ -59,6 +59,11 @@ component.
 
 ## `ScrapeLog`
 
+The scraper manager writes one log for every provider attempt, including
+scheduled runs, full manual runs, single-source runs, and standalone CLI runs.
+If persisting the log fails, the error is reported and the source result is
+marked degraded rather than silently appearing fully successful.
+
 | Field | Type | Notes |
 |---|---|---|
 | `id` | `String` | UUID primary key |

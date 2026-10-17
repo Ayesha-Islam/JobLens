@@ -1259,6 +1259,7 @@ export class ScraperManager {
     const name = (scraper as any).constructor?.name ?? source;
     console.log(chalk.blue(`\n▶ ${name}  query="${query}"  pages=${pages ?? 1}`));
 
+    let runResult: ScrapeRunResult;
     try {
       const result = await scraper.scrape(query, pages);
       const processed = await this.processor.process(result.jobs, result.source);
@@ -1266,7 +1267,7 @@ export class ScraperManager {
 
       this.printSourceSummary(result.source, result, processed, health);
 
-      return {
+      runResult = {
         source: result.source,
         jobsFound: result.jobs.length,
         jobsAdded: processed.added,
@@ -1292,7 +1293,7 @@ export class ScraperManager {
       const msg = e?.message || String(e);
       console.error(chalk.red(`  ✖ ${name} failed: ${msg}`));
 
-      return {
+      runResult = {
         source,
         jobsFound: 0,
         jobsAdded: 0,
@@ -1324,6 +1325,34 @@ export class ScraperManager {
         duration: 0,
       };
     }
+
+    try {
+      await db.scrapeLog.create({
+        data: {
+          source: runResult.source,
+          status: runResult.status,
+          jobsFound: runResult.jobsFound,
+          jobsAdded: runResult.jobsAdded,
+          errorMessage:
+            runResult.error ??
+            (runResult.errors.length
+              ? runResult.errors.join(' | ').slice(0, 1000)
+              : null),
+          durationMs: runResult.duration,
+        },
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(
+        chalk.red(`  ✖ Failed to persist scrape log for ${runResult.source}: ${message}`)
+      );
+      runResult.warnings.push(`scrape_log_write_failed: ${message}`);
+      if (runResult.health !== 'FAILED') {
+        runResult.health = 'DEGRADED';
+      }
+    }
+
+    return runResult;
   }
 
   private getRunHealth(results: ScrapeRunResult[]): RunHealth {
@@ -1516,27 +1545,6 @@ async function main() {
   let results: ScrapeRunResult[] = [];
   try {
     results = await manager.runAll();
-
-    const logInserts = results.map(r =>
-      db.scrapeLog.create({
-        data: {
-          source: r.source,
-          status: r.status,
-          jobsFound: r.jobsFound,
-          jobsAdded: r.jobsAdded,
-          errorMessage: r.error ?? (r.errors.length ? r.errors.join(' | ').slice(0, 1000) : null),
-          durationMs: r.duration,
-        },
-      })
-    );
-    const logResults = await Promise.allSettled(logInserts);
-    const written = logResults.filter(r => r.status === 'fulfilled').length;
-    const failedLogs = logResults.length - written;
-    if (failedLogs > 0) {
-      console.warn(chalk.yellow(`  ⚠ Wrote ${written}/${results.length} ScrapeLog entries (${failedLogs} failed)`));
-    } else {
-      console.log(chalk.dim(`  📋 Wrote ${written} ScrapeLog entries`));
-    }
 
   } finally {
     await Promise.allSettled([

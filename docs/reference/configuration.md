@@ -21,7 +21,8 @@ Replace every secret placeholder. Do not commit any populated `.env` file.
 
 | Variable | Description |
 | --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string used by Prisma and the shared `pg` pool. |
+| `DATABASE_URL` | PostgreSQL connection string used by the application and shared `pg` pool. Use Neon's pooled URL for application traffic. |
+| `DATABASE_URL_UNPOOLED` | Optional direct PostgreSQL connection string used by Prisma CLI operations such as migrations and Studio. |
 | `JWT_SECRET` | Signs and verifies 24-hour backend JWTs. Startup fails if it is missing. |
 
 ### Runtime and HTTP
@@ -67,7 +68,7 @@ continues with PostgreSQL.
 | `DB_POOL_MAX` | No | `2` | `20` |
 | `DB_POOL_IDLE_TIMEOUT_MS` | No | `10000` | `30000` |
 | `DB_POOL_CONNECTION_TIMEOUT_MS` | No | `15000` | `10000` |
-| `DB_SSL` | No | Disabled | Disabled unless set to `true`/`1` or the URL uses `db.prisma.io` |
+| `DB_SSL` | No | Disabled | Enabled for Neon and `db.prisma.io` URLs, or when set to `true`/`1`. |
 
 ### Scraper behavior
 
@@ -76,18 +77,6 @@ continues with PostgreSQL.
 | `ENABLE_EXPERIMENTAL_SOURCES` | No | `false` | Includes experimental sources such as NoDesk when set to `true`. |
 | `DEBUG` | No | `false` | Enables additional processing diagnostics. |
 | `TRACE` | No | `false` | Enables the most detailed scraper/processor tracing. |
-
-### Reserved settings (not implemented)
-
-| Variable | Description |
-| --- | --- |
-| `ANTHROPIC_API_KEY` | Loaded by configuration, but no Anthropic workflow currently consumes it. |
-| `RESEND_API_KEY` | Loaded by configuration, but outbound email is not implemented. |
-| `ALERT_EMAIL` | Reserved; no alert dispatcher currently consumes it. |
-| `FROM_EMAIL` | Reserved; no outbound-email path currently consumes it. |
-
-These names are retained only as placeholders. Do not present AI enrichment,
-email delivery, or alerting as implemented capabilities.
 
 ## Frontend
 

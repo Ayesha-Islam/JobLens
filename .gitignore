@@ -11,13 +11,12 @@ logs/
 
 # Environment variables
 .env
+.env.example
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 !.env.example
-!api/.env.example
-!frontend/.env.example
 
 # Build and test outputs
 dist/
@@ -61,3 +60,4 @@ temp/
 ehthumbs.db
 Thumbs.db
 /backups/
+.neon

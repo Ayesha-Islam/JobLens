@@ -2,24 +2,26 @@ import app from './app';
 import container from './container';
 import chalk from 'chalk';
 import { setupScheduler } from './scheduler';
+import { env } from './config';
 
 const PORT = process.env.PORT || 3001;
 
 async function startServer() {
   try {
-    console.log(chalk.cyan('🚀 Starting Job Scraper API...'));
-    console.log(chalk.gray(`   Environment: ${process.env.NODE_ENV || 'development'}`));
+    console.log('🚀 Starting Job Scraper API...');
 
     await container.connect();
+    if(env.ENABLE_SCHEDULAR){
+      setupScheduler();
+      console.log('✓ Scheduler is enabled');
+    }else{
+      console.log('✓ Scheduler is disabled');
+    }
 
-    setupScheduler();
     console.log(chalk.green('✓ Scheduler initialized'));
 
     const server = app.listen(Number(PORT), '0.0.0.0', () => {
       console.log(chalk.green(`✓ Server running on port ${PORT}`));
-      console.log(chalk.cyan(`   http://localhost:${PORT}`));
-      console.log(chalk.cyan(`   Health: http://localhost:${PORT}/api/v1/health`));
-      console.log(chalk.cyan(`   Jobs: http://localhost:${PORT}/api/v1/jobs`));
     });
 
     server.on('error', (error: any) => {

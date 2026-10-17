@@ -21,9 +21,11 @@ cp .env.example .env
 npm install
 ```
 
-Edit `api/.env`. At minimum, provide a reachable `DATABASE_URL`, a reachable
-Redis configuration, a long random `JWT_SECRET`, and an `ADMIN_EMAILS` value if
-you need admin routes.
+Edit `api/.env`. For Neon, set `DATABASE_URL` to the pooled connection string
+and `DATABASE_URL_UNPOOLED` to the direct connection string. The API uses the
+pooled URL; Prisma CLI commands use the direct URL. Also provide a reachable
+Redis configuration, a long random `JWT_SECRET`, and an `ADMIN_EMAILS` value
+if you need admin routes.
 
 Generate the Prisma client and apply development migrations:
 
@@ -77,6 +79,10 @@ Replace all placeholder passwords and secrets, then run:
 ```bash
 docker compose up --build
 ```
+
+Compose passes `DATABASE_URL` to the API. The bundled local PostgreSQL service
+is opt-in and can be started separately with
+`docker compose --profile local-db up -d postgres`.
 
 Useful lifecycle commands:
 

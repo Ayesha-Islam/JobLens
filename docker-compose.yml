@@ -1,33 +1,15 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: job-scraper-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-jobuser}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jobpass}
-      POSTGRES_DB: ${POSTGRES_DB:-jobscraper}
-    ports:
-      # Host-only: the api container reaches Postgres via the Docker network
-      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-jobuser} -d $${POSTGRES_DB:-jobscraper}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   api:
+    image: joblens-api
     build:
       context: ./api
       dockerfile: Dockerfile
-    container_name: job-scraper-api
+    container_name: joblens-api
     restart: unless-stopped
     environment:
       NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: postgresql://${POSTGRES_USER:-jobuser}:${POSTGRES_PASSWORD:-jobpass}@postgres:5432/${POSTGRES_DB:-jobscraper}?schema=public
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL must be set}
       REDIS_URL: ${REDIS_URL}
       PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
@@ -37,18 +19,15 @@ services:
       DB_SSL: ${DB_SSL:-false}
     ports:
       - "3001:3001"
-    depends_on:
-      postgres:
-        condition: service_healthy
-
   frontend:
+    image: joblens-frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
         # Baked into the client bundle at build time: rebuild after changing HOST_IP
         NEXT_PUBLIC_API_URL: http://${HOST_IP:-localhost}:3001/api/v1
-    container_name: job-scraper-frontend
+    container_name: joblens-frontend
     restart: unless-stopped
     environment:
       NODE_ENV: production
