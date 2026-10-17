@@ -13,7 +13,7 @@ app.use(helmet());
 app.use(cors({
   origin: process.env.NODE_ENV === 'development'
     ? true
-    : process.env.FRONTEND_URL || 'https://job-lens-gules.vercel.app/',
+    : (process.env.FRONTEND_URL!),
   credentials: true,
 }));
 app.use(compression());
