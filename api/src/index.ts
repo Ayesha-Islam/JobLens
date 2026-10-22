@@ -11,7 +11,7 @@ async function startServer() {
     console.log('🚀 Starting Job Scraper API...');
 
     await container.connect();
-    if(env.ENABLE_SCHEDULAR){
+    if(env.ENABLE_SCHEDULER){
       setupScheduler();
       console.log('✓ Scheduler is enabled');
     }else{

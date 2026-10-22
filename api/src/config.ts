@@ -14,7 +14,7 @@ export interface Env {
   DB_SSL?: string;
   JWT_SECRET: string;
   ADMIN_EMAILS?: string;
-  ENABLE_SCHEDULAR: boolean;
+  ENABLE_SCHEDULER: boolean;
 }
 
 const missing = (key: string): never => {
@@ -26,7 +26,7 @@ export const env: Env = {
   PORT: process.env.PORT ?? '3001',
   DATABASE_URL: process.env.DATABASE_URL ?? missing('DATABASE_URL'),
   REDIS_URL: process.env.REDIS_URL,
-  ENABLE_SCHEDULAR: process.env.ENABLE_SCHEDULAR === 'true',
+  ENABLE_SCHEDULER: process.env.ENABLE_SCHEDULER === 'true',
   DB_POOL_MAX: process.env.DB_POOL_MAX,
   DB_POOL_IDLE_TIMEOUT_MS: process.env.DB_POOL_IDLE_TIMEOUT_MS,
   DB_POOL_CONNECTION_TIMEOUT_MS: process.env.DB_POOL_CONNECTION_TIMEOUT_MS,

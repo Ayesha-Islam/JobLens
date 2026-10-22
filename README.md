@@ -1,135 +1,124 @@
 # JobLens
 
-JobLens is a full-stack remote-job aggregator built around a data-quality
-problem: different job boards describe the same vacancy in incompatible and
-sometimes unreliable ways.
+**JobLens aggregates remote job listings from multiple sources into one searchable platform, using a pipeline to normalize, validate, deduplicate, and store listings.**
 
-The system collects candidate listings, sends every source through shared
-validation and description-quality rules, deduplicates jobs with a
-database-enforced business key, and exposes the resulting dataset through an
-Express API and Next.js interface.
+**Live demo:** [JobLens](https://job-lens-gules.vercel.app/)
 
-## Why this project matters
 
-A scraper can return HTML and still produce bad data. Real extraction output
-included missing descriptions, authentication walls, navigation text, unstable
-URLs, and the same role published through different sources.
+## Features
 
-JobLens addresses that boundary explicitly:
+- Aggregate listings from multiple job boards, APIs, and feeds.
+- Search job listings and view job details.
+- Normalize, validate, and deduplicate job records.
+- User accounts and saved jobs.
+- Job statistics and Redis caching.
+- Admin endpoints for manual scraping and operations.
 
-```text
-Provider extraction
-  → normalization and validation
-  → source-aware description handling
-  → deterministic deduplication
-  → PostgreSQL
-  → cache invalidation
-  → searchable API and web interface
+## Architecture
+
+```mermaid
+flowchart TB
+    Browser --> Frontend["Next.js / React"]
+    Frontend --> API["Express REST API"]
+    API --> Services["Application services"]
+    Services --> DB[("PostgreSQL")]
+    Services <--> Redis[("Redis cache")]
+    Trigger["node-cron / Admin trigger"] --> Scrapers["Source scrapers"]
+    Scrapers --> Sources["Job boards and feeds"]
+    Scrapers --> Processor["Normalize, validate, deduplicate"]
+    Processor --> DB
+    Processor -.-> Redis
 ```
 
-The central engineering decision is to treat external data as untrusted rather
-than letting each provider write directly to the database.
+## Technology stack
 
-## What is implemented
-
-- Eight provider adapters enabled by default; NoDesk is experimental.
-- Shared validation with explicit rejection reasons and quality metrics.
-- Description cleanup for page wrappers, authentication walls, and other noise.
-- Deterministic `companyKey + positionKey + locationKey` deduplication backed by
-  a PostgreSQL unique constraint.
-- Parameterized SQL search with filtering, ordering, counts, and pagination.
-- Redis cache-aside reads with bounded TTLs and write-path invalidation.
-- Registration, login, saved jobs, statistics, and health endpoints.
-- JWT-protected administrative routes with an email allowlist.
-- Daily in-process scraping at 02:00 in the server's local timezone.
-
-## Verification
-
-The reviewed working tree passes:
-
-- **126 backend tests across 17 files**
-- **Backend TypeScript compiler check (`tsc --noEmit`)**
-- **Next.js production build**
-
-A historical scrape snapshot and a reproducible description-cleaning
-microbenchmark are documented without turning them into unsupported production
-performance claims. See [Verification evidence](docs/evidence/verification.md).
-
-## Capability status
-
-| Status | Capability |
+| Layer | Technologies |
 |---|---|
-| Implemented | Shared ingestion, deterministic deduplication, search, caching, authentication, saved jobs, admin controls |
-| Experimental | NoDesk provider adapter |
-| Planned | Durable job queue, distributed scheduling, full-text/trigram search, scalable cache invalidation, rate limiting, token refresh |
+| Frontend | Next.js, React, TypeScript, Tailwind CSS |
+| API | Node.js, Express, TypeScript |
+| Authentication | NextAuth, JWT, bcryptjs |
+| Database | PostgreSQL, Prisma, `pg` |
+| Cache | Redis, `ioredis` |
+| Ingestion | Puppeteer, Cheerio, HTTP APIs / RSS |
+| Scheduling and testing | node-cron, Vitest, Supertest |
+| Deployment | Docker, Docker Compose |
 
-## Technology
+## Data ingestion
 
-- **Backend:** Node.js, Express, TypeScript, Prisma, PostgreSQL, Redis
-- **Scraping:** Puppeteer, Cheerio
-- **Frontend:** Next.js, React, Tailwind CSS, NextAuth
-- **Verification:** Vitest, TypeScript builds, reproducible microbenchmark
-- **Local stack:** Docker Compose
+1. Scrapers fetch listings from enabled sources.
+2. A shared processor maps data to a common format, normalizes fields, validates records, and enriches descriptions when needed.
+3. Deduplication keys are generated and accepted records are saved to PostgreSQL.
+4. Related cache entries are invalidated after writes.
 
-## Run locally
+Scraping runs daily at 02:00 in the process's local timezone and can also be triggered by an administrator.
 
-Prerequisites: Node.js 20+, PostgreSQL, and Redis. The API bootstrap currently
-requires both data services to be reachable; the standalone scraper can continue
-when its cache connection is unavailable.
+## Database and deduplication
+
+PostgreSQL stores `Job`, `User`, `SavedJob`, and `ScrapeLog` records. Jobs use normalized `companyKey`, `positionKey`, and `locationKey` values for identity, enforced by a composite unique constraint:
+
+```prisma
+@@unique([companyKey, positionKey, locationKey])
+```
+
+This is deterministic matching, not fuzzy deduplication.
+
+## Caching
+
+Redis uses cache-aside reads:
+
+- Job lists: **5 minutes**
+- Job details: **10 minutes**
+- Statistics: **30 minutes**
+
+PostgreSQL remains the source of truth.
+
+## Tests
+
+From `api/`:
 
 ```bash
-cd api
-cp .env.example .env
-npm install
-npm run prisma:generate
-npm run prisma:migrate
-npm run dev
+npm ci
+npm test
+npm run test:coverage
+npm run build
 ```
 
-In another terminal:
+From `frontend/`:
 
 ```bash
-cd frontend
-cp .env.example .env.local
-npm install
-npm run dev
+npm ci
+npm run type-check
+npm run build
 ```
 
-Open `http://localhost:3000`. Replace all example secrets before starting the
-applications. The complete setup, Docker workflow, and troubleshooting steps are
-in [Local development](docs/guides/local-development.md).
+## Local setup
 
-## Current boundaries
+**Requirements:** Node.js 20+, npm, PostgreSQL, and Redis.
 
-- Providers execute sequentially inside the API process.
-- The scheduler has an in-memory lock, not a distributed lease.
-- Search uses leading-wildcard PostgreSQL `ILIKE`; database search latency has
-  not been benchmarked.
-- Pagination values are parsed but are not yet capped to safe maximums.
-- Redis invalidation uses `KEYS`, which is suitable only for the current small
-  keyspace.
-- Provider HTML, access policies, and availability can change independently of
-  this repository.
-- Authentication does not yet include refresh tokens, password reset, email
-  verification, MFA, or rate limiting.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Ayesha-Islam/Job-scraper.git
+   cd Job-scraper
+   ```
+2. Copy `api/.env.example` to `api/.env` and configure the database, Redis, JWT, admin, and frontend-origin variables.
+3. Copy `frontend/.env.example` to `frontend/.env.local` and configure the API URL and NextAuth secret.
+4. Install dependencies and prepare the database:
+   ```bash
+   cd api
+   npm ci
+   npm run prisma:generate
+   npm run prisma:migrate
+   ```
+5. Start the API with `npm run dev`. In another terminal, run `npm run dev` from `frontend/`.
 
-## Documentation
+Docker Compose builds the API and frontend, but PostgreSQL and Redis must be provided separately.
 
-- [Project case study](docs/case-study.md)
-- [Architecture overview](docs/architecture/overview.md)
-- [Documentation index](docs/README.md)
-- [REST API reference](docs/reference/api.md)
-- [Verification evidence](docs/evidence/verification.md)
-- [Standalone scraper dependency incident](docs/engineering-notes/standalone-scraper-dependency-container.md)
+## Limitations and future improvements
 
-## Repository layout
+**Current limitations:** external source changes can break scrapers; scraping is sequential; scheduling is process-local; deduplication is not fuzzy; Redis invalidation uses `KEYS`; search scalability is unverified.
 
-```text
-api/       Express API, processing pipeline, scrapers, Prisma schema, tests
-frontend/  Next.js interface and authentication bridge
-docs/      Case study, architecture, decisions, guides, reference, evidence
-```
+**Future improvements:** durable queue workers, distributed scheduling, scalable cache invalidation, full-text search, rate limiting, stronger account security, and ingestion monitoring.
 
-## License
+## Further documentation
 
-Licensed under the [ISC License](LICENSE).
+See [`docs/`](docs/) for project documentation and [`api/prisma/schema.prisma`](api/prisma/schema.prisma) for database models.
