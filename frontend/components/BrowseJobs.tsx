@@ -1,12 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react';
-import { Search, ChevronLeft, ChevronRight, Grid3x3, LayoutGrid, MapPin, SlidersHorizontal } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Grid3x3,
+  LayoutGrid,
+  MapPin,
+  SlidersHorizontal
+} from 'lucide-react';
+
 import { Job } from '@/types';
 import { JobCard } from './JobCard';
 import { JobDetailModal } from './JobDetailModal';
 import { FilterPanel, FilterOptions } from './FilterPanel';
 import { getJobs } from '@/lib/api';
+
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,47 +51,54 @@ export function BrowseJobs({
 }: BrowseJobsProps) {
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [locationQuery, setLocationQuery] = useState('');
+
   const [viewMode, setViewMode] = useState<'grid' | 'masonry'>('grid');
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+
   const [filters, setFilters] = useState<FilterOptions>({
     jobTypes: [],
-    remote: null,
-    salaryRange: 'any',
-    experience: [],
+    search: '',
+    location: '',
   });
+
   const [jobs, setJobs] = useState<Job[]>(initialJobs);
   const [loading, setLoading] = useState(false);
+
   const [currentPage, setCurrentPage] = useState(initialPage || 1);
+
   const [totalPages, setTotalPages] = useState(
     initialTotalPages ?? Math.max(1, Math.ceil((initialJobs?.length || 0) / 50))
   );
+
   const [totalJobs, setTotalJobs] = useState(
     initialTotalJobs ?? (initialJobs?.length || 0)
   );
 
-  useEffect(() => {
-    if (initialJobs && initialJobs.length > 0) {
-      setJobs(initialJobs);
+  // Prevent the initial render from triggering an unnecessary debounce request.
+  const isInitialSearchRender = useRef(true);
 
-      const limit = 50;
-      setTotalJobs(initialTotalJobs ?? initialJobs.length);
-      setCurrentPage(initialPage ?? 1);
-      setTotalPages(initialTotalPages ?? Math.max(1, Math.ceil(initialJobs.length / limit)));
-    } else {
-      fetchFilteredJobs(1);
-    }
-  }, [initialJobs, initialTotalJobs, initialPage, initialTotalPages]);
+  // Prevent duplicate requests when applying or clearing drawer filters.
+  const skipNextDebounce = useRef(false);
 
-  const fetchFilteredJobs = async (page: number = 1) => {
+  const fetchFilteredJobs = async (
+    page: number = 1,
+    filterOverrides?: FilterOptions
+  ) => {
     try {
       setLoading(true);
+
+      const activeFilters = filterOverrides ?? {
+        ...filters,
+        search: searchQuery,
+        location: locationQuery,
+      };
 
       const response = await getJobs({
         page,
         limit: 50,
-        search: searchQuery || undefined,
-        location: locationQuery || undefined,
-        type: filters.jobTypes.length > 0 ? filters.jobTypes[0] : undefined,
+        search: activeFilters.search.trim() || undefined,
+        location: activeFilters.location.trim() || undefined,
+        type: activeFilters.jobTypes[0] || undefined,
       });
 
       if (response.success && response.data) {
@@ -97,46 +114,118 @@ export function BrowseJobs({
     }
   };
 
+  // Initialize jobs and pagination.
   useEffect(() => {
+    if (initialJobs && initialJobs.length > 0) {
+      setJobs(initialJobs);
+
+      const limit = 50;
+
+      setTotalJobs(initialTotalJobs ?? initialJobs.length);
+      setCurrentPage(initialPage ?? 1);
+
+      setTotalPages(
+        initialTotalPages ?? Math.max(1, Math.ceil(initialJobs.length / limit))
+      );
+    } else {
+      fetchFilteredJobs(1);
+    }
+  }, [
+    initialJobs,
+    initialTotalJobs,
+    initialPage,
+    initialTotalPages
+  ]);
+
+  // Debounce search and location changes.
+  useEffect(() => {
+    if (isInitialSearchRender.current) {
+      isInitialSearchRender.current = false;
+      return;
+    }
+
+    if (skipNextDebounce.current) {
+      skipNextDebounce.current = false;
+      return;
+    }
+
     const timer = setTimeout(() => {
-      if (searchQuery !== initialSearch || locationQuery) {
-        fetchFilteredJobs(1);
-      }
+      fetchFilteredJobs(1, {
+        ...filters,
+        search: searchQuery,
+        location: locationQuery,
+      });
     }, 500);
 
     return () => clearTimeout(timer);
   }, [searchQuery, locationQuery]);
 
-  const filteredJobs = (jobs || []).filter(job => {
-    const matchesJobType = filters.jobTypes.length === 0 || filters.jobTypes.includes(job.type);
-    return matchesJobType;
-  });
 
+  const filteredJobs = jobs || [];
   const handleApplyFilters = (newFilters: FilterOptions) => {
+    skipNextDebounce.current =
+      searchQuery !== newFilters.search ||
+      locationQuery !== newFilters.location;
+
     setFilters(newFilters);
-    fetchFilteredJobs(1);
+    setSearchQuery(newFilters.search);
+    setLocationQuery(newFilters.location);
+
+    fetchFilteredJobs(1, newFilters);
   };
 
+  // Clear all filters and search criteria.
+  const handleClearFilters = () => {
+    const emptyFilters: FilterOptions = {
+      jobTypes: [],
+      search: '',
+      location: '',
+    };
+
+    skipNextDebounce.current =
+      searchQuery !== '' || locationQuery !== '';
+
+    setFilters(emptyFilters);
+    setSearchQuery('');
+    setLocationQuery('');
+
+    fetchFilteredJobs(1, emptyFilters);
+  };
+
+  // Pagination.
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
-      fetchFilteredJobs(newPage);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      fetchFilteredJobs(newPage, {
+        ...filters,
+        search: searchQuery,
+        location: locationQuery,
+      });
+
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
     }
   };
-
-  const activeFilterCount = filters.jobTypes.length + (filters.remote !== null ? 1 : 0);
 
   return (
     <div className="min-h-screen bg-background pt-24">
       <div className="mx-auto max-w-7xl p-8">
         <div className="px-6 py-6">
           <div className="text-center mb-6">
-            <h1 className="text-6xl text-foreground font-bold mb-2">Browse All Jobs</h1>
+            <h1 className="text-6xl text-foreground font-bold mb-2">
+              Browse All Jobs
+            </h1>
+
             <p className="text-sm text-foreground">
               Explore opportunities that align with your career goals.
             </p>
+
             {totalJobs > 0 && (
-              <Badge variant="secondary" className="mt-2 bg-card text-foreground hover:bg-primary">
+              <Badge
+                variant="secondary"
+                className="mt-2 bg-card text-foreground hover:bg-primary"
+              >
                 {jobs.length} of {totalJobs} jobs
               </Badge>
             )}
@@ -148,6 +237,7 @@ export function BrowseJobs({
                 <div className="flex-1 flex items-center gap-3 bg-background border border-border shadow-sm hover:shadow-md transition-shadow py-1.5 px-2 rounded-md">
                   <div className="flex items-center flex-1 group">
                     <Search className="w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors ml-1" />
+
                     <Input
                       type="text"
                       value={searchQuery}
@@ -161,9 +251,9 @@ export function BrowseJobs({
                       }}
                     />
                   </div>
-
                   <div className="flex items-center flex-1 group">
                     <MapPin className="w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors ml-1" />
+
                     <Input
                       type="text"
                       value={locationQuery}
@@ -177,7 +267,6 @@ export function BrowseJobs({
                       }}
                     />
                   </div>
-
                   <Button
                     onClick={() => fetchFilteredJobs(1)}
                     className="bg-primary hover:bg-primary text-background font-semibold h-9 px-8 transition-colors"
@@ -192,7 +281,9 @@ export function BrowseJobs({
                     variant="outline"
                     size="icon"
                     onClick={onToggleFilters}
-                    className={`h-11 w-11 hover:bg-accent ${showFilters ? 'bg-background text-foreground border-primary' : ''
+                    className={`h-11 w-11 hover:bg-accent ${showFilters
+                      ? 'bg-background text-foreground border-primary'
+                      : ''
                       }`}
                   >
                     <SlidersHorizontal className="h-4 w-4" />
@@ -202,7 +293,9 @@ export function BrowseJobs({
                     variant="outline"
                     size="icon"
                     onClick={() =>
-                      setViewMode((current) => current === 'grid' ? 'masonry' : 'grid')
+                      setViewMode((current) =>
+                        current === 'grid' ? 'masonry' : 'grid'
+                      )
                     }
                     className="h-11 w-11 bg-background text-foreground hover:bg-primary hover:text-background transition-colors"
                   >
@@ -218,13 +311,20 @@ export function BrowseJobs({
           </Card>
         </div>
 
+        {/* Filter panel */}
         {showFilters && (
           <FilterPanel
             onClose={onToggleFilters}
             onApplyFilters={handleApplyFilters}
+            initialFilters={{
+              ...filters,
+              search: searchQuery,
+              location: locationQuery,
+            }}
           />
         )}
 
+        {/* Job details modal */}
         {selectedJob && (
           <JobDetailModal
             job={selectedJob}
@@ -235,30 +335,7 @@ export function BrowseJobs({
         )}
 
         <main className="px-6 py-8">
-          {activeFilterCount > 0 && (
-            <div className="mb-6 flex flex-wrap gap-2 items-center">
-              <span className="text-sm font-medium">Active filters:</span>
-              {filters.jobTypes.map(type => (
-                <Badge key={type} variant="secondary" className="bg-primary text-foreground hover:bg-primary">
-                  {type.toLowerCase().replace('_', ' ')}
-                </Badge>
-              ))}
-              {filters.remote !== null && (
-                <Badge variant="secondary" className="bg-primary text-foreground hover:bg-primary">
-                  {filters.remote ? 'Remote' : 'On-site'}
-                </Badge>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleApplyFilters({ jobTypes: [], remote: null, salaryRange: 'any', experience: [] })}
-                className="hover:bg-accent"
-              >
-                Clear all
-              </Button>
-            </div>
-          )}
-
+          {/* Loading skeletons */}
           {loading && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[...Array(6)].map((_, i) => (
@@ -268,6 +345,7 @@ export function BrowseJobs({
                       <Skeleton className="h-4 w-3/4" />
                       <Skeleton className="h-4 w-1/2" />
                       <Skeleton className="h-20 w-full" />
+
                       <div className="flex gap-2">
                         <Skeleton className="h-6 w-16" />
                         <Skeleton className="h-6 w-20" />
@@ -281,6 +359,7 @@ export function BrowseJobs({
 
           {!loading && (
             <>
+              {/* Grid view */}
               {viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {filteredJobs.map((job) => (
@@ -290,10 +369,12 @@ export function BrowseJobs({
                       isSaved={savedJobs.has(job.id)}
                       onSave={() => onSaveJob(job.id)}
                       onClick={() => setSelectedJob(job)}
+                      searchTerms={[searchQuery, locationQuery]}
                     />
                   ))}
                 </div>
               ) : (
+                /* Masonry view */
                 <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
                   {filteredJobs.map((job) => (
                     <div key={job.id} className="break-inside-avoid">
@@ -303,29 +384,32 @@ export function BrowseJobs({
                         onSave={() => onSaveJob(job.id)}
                         onClick={() => setSelectedJob(job)}
                         compact
+                        searchTerms={[searchQuery, locationQuery]}
                       />
                     </div>
                   ))}
                 </div>
               )}
 
-              {filteredJobs.length === 0 && !loading && (
+              {/* No jobs found */}
+              {filteredJobs.length === 0 && (
                 <Card className="mt-12 border-2 border-border">
                   <CardContent className="p-12 text-center">
                     <div className="mx-auto w-16 h-16 mb-4 rounded-full bg-muted flex items-center justify-center">
                       <Search className="h-8 w-8 text-muted-foreground" />
                     </div>
-                    <h3 className="text-lg font-semibold mb-2">No jobs found</h3>
+
+                    <h3 className="text-lg font-semibold mb-2">
+                      No jobs found
+                    </h3>
+
                     <p className="text-muted-foreground mb-4">
                       Try adjusting your search criteria or filters
                     </p>
+
                     <Button
                       variant="outline"
-                      onClick={() => {
-                        setSearchQuery('');
-                        setLocationQuery('');
-                        handleApplyFilters({ jobTypes: [], remote: null, salaryRange: 'any', experience: [] });
-                      }}
+                      onClick={handleClearFilters}
                       className="hover:bg-accent"
                     >
                       Clear all filters
@@ -334,9 +418,11 @@ export function BrowseJobs({
                 </Card>
               )}
 
+              {/* Pagination */}
               {totalPages > 1 && (
                 <div className="mt-12">
                   <Separator className="mb-6" />
+
                   <div className="flex justify-center items-center gap-2">
                     <Button
                       variant="outline"
@@ -349,33 +435,41 @@ export function BrowseJobs({
                     </Button>
 
                     <div className="flex items-center gap-1">
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        let pageNum;
-                        if (totalPages <= 5) {
-                          pageNum = i + 1;
-                        } else if (currentPage <= 3) {
-                          pageNum = i + 1;
-                        } else if (currentPage >= totalPages - 2) {
-                          pageNum = totalPages - 4 + i;
-                        } else {
-                          pageNum = currentPage - 2 + i;
-                        }
+                      {Array.from(
+                        { length: Math.min(5, totalPages) },
+                        (_, i) => {
+                          let pageNum;
 
-                        return (
-                          <Button
-                            key={pageNum}
-                            variant={currentPage === pageNum ? 'default' : 'outline'}
-                            size="icon"
-                            onClick={() => handlePageChange(pageNum)}
-                            className={`w-10 h-10 ${currentPage === pageNum
-                              ? 'bg-primary text-background hover:bg-primary hover:text-background'
-                              : 'hover:bg-accent'
-                              }`}
-                          >
-                            {pageNum}
-                          </Button>
-                        );
-                      })}
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
+
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={
+                                currentPage === pageNum
+                                  ? 'default'
+                                  : 'outline'
+                              }
+                              size="icon"
+                              onClick={() => handlePageChange(pageNum)}
+                              className={`w-10 h-10 ${currentPage === pageNum
+                                ? 'bg-primary text-background hover:bg-primary hover:text-background'
+                                : 'hover:bg-accent'
+                                }`}
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        }
+                      )}
                     </div>
 
                     <Button

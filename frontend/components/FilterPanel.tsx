@@ -11,21 +11,27 @@ import {
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ChevronDown, Briefcase, DollarSign, BarChart2, SlidersHorizontal } from 'lucide-react';
+import {
+  ChevronDown,
+  Briefcase,
+  Search,
+  MapPin,
+  SlidersHorizontal,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface FilterOptions {
   jobTypes: JobType[];
-  remote: boolean | null;
-  salaryRange: string;
-  experience: string[];
+  search: string;
+  location: string;
 }
 
 interface FilterPanelProps {
   onClose: () => void;
   onApplyFilters: (filters: FilterOptions) => void;
+  initialFilters?: FilterOptions;
 }
 
 const JOB_TYPES: { value: JobType; label: string }[] = [
@@ -35,30 +41,13 @@ const JOB_TYPES: { value: JobType; label: string }[] = [
   { value: 'INTERNSHIP', label: 'Internship' },
 ];
 
-const EXPERIENCE_LEVELS = [
-  'Entry Level',
-  'Mid Level',
-  'Senior Level',
-  'Lead',
-  'Executive',
-];
-
-const SALARY_RANGES = [
-  { value: '0-50k', label: '$0 – $50k' },
-  { value: '50k-100k', label: '$50k – $100k' },
-  { value: '100k-150k', label: '$100k – $150k' },
-  { value: '150k-200k', label: '$150k – $200k' },
-  { value: '200k+', label: '$200k+' },
-];
-
 const EMPTY_FILTERS: FilterOptions = {
   jobTypes: [],
-  remote: null,
-  salaryRange: '',
-  experience: [],
+  search: '',
+  location: '',
 };
 
-type SectionKey = 'jobType' | 'location' | 'salary' | 'experience';
+type SectionKey = 'jobType' | 'search' | 'location';
 
 interface AccordionSectionProps {
   id: SectionKey;
@@ -82,6 +71,7 @@ function AccordionSection({
   return (
     <div className="border-b border-border/40 last:border-b-0">
       <button
+        type="button"
         onClick={() => onToggle(id)}
         className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-muted/30 transition-colors text-left group"
       >
@@ -121,10 +111,14 @@ function AccordionSection({
   );
 }
 
-export function FilterPanel({ onClose, onApplyFilters }: FilterPanelProps) {
-  const [filters, setFilters] = useState<FilterOptions>(EMPTY_FILTERS);
+export function FilterPanel({
+  onClose,
+  onApplyFilters,
+  initialFilters = EMPTY_FILTERS,
+}: FilterPanelProps) {
+  const [filters, setFilters] = useState<FilterOptions>(initialFilters);
   const [openSections, setOpenSections] = useState<Set<SectionKey>>(
-    new Set(['jobType', 'location'])
+    new Set(['jobType', 'search', 'location'])
   );
 
   const toggleSection = (id: SectionKey) =>
@@ -142,16 +136,12 @@ export function FilterPanel({ onClose, onApplyFilters }: FilterPanelProps) {
         : [...prev.jobTypes, type],
     }));
 
-  const toggleExperience = (level: string) =>
-    setFilters(prev => ({
-      ...prev,
-      experience: prev.experience.includes(level)
-        ? prev.experience.filter(l => l !== level)
-        : [...prev.experience, level],
-    }));
-
   const handleApply = () => {
-    onApplyFilters(filters);
+    onApplyFilters({
+      ...filters,
+      search: filters.search.trim(),
+      location: filters.location.trim(),
+    });
     onClose();
   };
 
@@ -162,20 +152,12 @@ export function FilterPanel({ onClose, onApplyFilters }: FilterPanelProps) {
 
   const activeFilterCount =
     filters.jobTypes.length +
-    filters.experience.length +
-    (filters.remote !== null ? 1 : 0) +
-    (filters.salaryRange ? 1 : 0);
-
-  const locationLabel =
-    filters.remote === null ? null
-      : filters.remote ? 'Remote only'
-        : 'On-site only';
+    (filters.search.trim() ? 1 : 0) +
+    (filters.location.trim() ? 1 : 0);
 
   return (
     <Sheet open={true} onOpenChange={onClose}>
       <SheetContent className="w-full sm:max-w-xs flex flex-col p-0 overflow-hidden bg-background border-border text-foreground">
-
-        {/* Header */}
         <SheetHeader className="px-5 pt-5 pb-4 border-b border-border/40 shrink-0">
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2 text-base font-medium text-foreground">
@@ -189,6 +171,7 @@ export function FilterPanel({ onClose, onApplyFilters }: FilterPanelProps) {
             </SheetTitle>
             {activeFilterCount > 0 && (
               <button
+                type="button"
                 onClick={handleReset}
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
@@ -201,9 +184,7 @@ export function FilterPanel({ onClose, onApplyFilters }: FilterPanelProps) {
           </SheetDescription>
         </SheetHeader>
 
-        {/* Accordion body */}
         <div className="flex-1 overflow-y-auto divide-y-0">
-
           <AccordionSection
             id="jobType"
             label="Job type"
@@ -231,116 +212,82 @@ export function FilterPanel({ onClose, onApplyFilters }: FilterPanelProps) {
           </AccordionSection>
 
           <AccordionSection
-            id="salary"
-            label="Salary range"
-            icon={<DollarSign className="h-3.5 w-3.5" />}
-            count={filters.salaryRange ? 1 : 0}
-            isOpen={openSections.has('salary')}
+            id="search"
+            label="Search"
+            icon={<Search className="h-3.5 w-3.5" />}
+            count={filters.search.trim() ? 1 : 0}
+            isOpen={openSections.has('search')}
             onToggle={toggleSection}
           >
-            <RadioGroup
-              value={filters.salaryRange || 'any'}
-              onValueChange={value =>
-                setFilters(prev => ({
-                  ...prev,
-                  salaryRange: value === 'any' ? '' : value,
-                }))
+            <Input
+              value={filters.search}
+              onChange={event =>
+                setFilters(prev => ({ ...prev, search: event.target.value }))
               }
-              className="space-y-2.5"
-            >
-              <div className="flex items-center gap-2.5">
-                <RadioGroupItem value="any" id="sal-any" className="h-3.5 w-3.5 border-border/60 text-primary" />
-                <Label htmlFor="sal-any" className="text-sm font-normal text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
-                  Any
-                </Label>
-              </div>
-              {SALARY_RANGES.map(({ value, label }) => (
-                <div key={value} className="flex items-center gap-2.5">
-                  <RadioGroupItem value={value} id={`sal-${value}`} className="h-3.5 w-3.5 border-border/60 text-primary" />
-                  <Label htmlFor={`sal-${value}`} className="text-sm font-normal text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
-                    {label}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
+              placeholder="Job title, company, or keyword"
+              aria-label="Search jobs"
+              className="h-9 text-sm"
+            />
           </AccordionSection>
 
           <AccordionSection
-            id="experience"
-            label="Experience level"
-            icon={<BarChart2 className="h-3.5 w-3.5" />}
-            count={filters.experience.length}
-            isOpen={openSections.has('experience')}
+            id="location"
+            label="Location"
+            icon={<MapPin className="h-3.5 w-3.5" />}
+            count={filters.location.trim() ? 1 : 0}
+            isOpen={openSections.has('location')}
             onToggle={toggleSection}
           >
-            {EXPERIENCE_LEVELS.map(level => (
-              <div key={level} className="flex items-center gap-2.5">
-                <Checkbox
-                  id={`exp-${level}`}
-                  checked={filters.experience.includes(level)}
-                  onCheckedChange={() => toggleExperience(level)}
-                  className="h-3.5 w-3.5 rounded border-border/60 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                />
-                <Label
-                  htmlFor={`exp-${level}`}
-                  className="text-sm font-normal text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
-                >
-                  {level}
-                </Label>
-              </div>
-            ))}
+            <Input
+              value={filters.location}
+              onChange={event =>
+                setFilters(prev => ({ ...prev, location: event.target.value }))
+              }
+              placeholder="Country, city, or region"
+              aria-label="Filter by location"
+              className="h-9 text-sm"
+            />
           </AccordionSection>
-
         </div>
 
-        {/* Active filter summary */}
         {activeFilterCount > 0 && (
           <div className="px-5 py-3 border-t border-border/40 shrink-0">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 font-medium">Active</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 font-medium">
+              Active
+            </p>
             <div className="flex flex-wrap gap-1.5">
-              {filters.jobTypes.map(t => (
+              {filters.jobTypes.map(type => (
                 <Badge
-                  key={t}
+                  key={type}
                   variant="secondary"
                   className="text-[11px] px-2 py-0.5 bg-muted/60 text-foreground border-0 cursor-pointer hover:bg-muted transition-colors"
-                  onClick={() => toggleJobType(t)}
+                  onClick={() => toggleJobType(type)}
                 >
-                  {JOB_TYPES.find(j => j.value === t)?.label} ×
+                  {JOB_TYPES.find(jobType => jobType.value === type)?.label} ×
                 </Badge>
               ))}
-              {locationLabel && (
+              {filters.search.trim() && (
                 <Badge
                   variant="secondary"
                   className="text-[11px] px-2 py-0.5 bg-muted/60 text-foreground border-0 cursor-pointer hover:bg-muted transition-colors"
-                  onClick={() => setFilters(p => ({ ...p, remote: null }))}
+                  onClick={() => setFilters(prev => ({ ...prev, search: '' }))}
                 >
-                  {locationLabel} ×
+                  Search: {filters.search.trim()} ×
                 </Badge>
               )}
-              {filters.salaryRange && (
+              {filters.location.trim() && (
                 <Badge
                   variant="secondary"
                   className="text-[11px] px-2 py-0.5 bg-muted/60 text-foreground border-0 cursor-pointer hover:bg-muted transition-colors"
-                  onClick={() => setFilters(p => ({ ...p, salaryRange: '' }))}
+                  onClick={() => setFilters(prev => ({ ...prev, location: '' }))}
                 >
-                  {SALARY_RANGES.find(r => r.value === filters.salaryRange)?.label} ×
+                  Location: {filters.location.trim()} ×
                 </Badge>
               )}
-              {filters.experience.map(level => (
-                <Badge
-                  key={level}
-                  variant="secondary"
-                  className="text-[11px] px-2 py-0.5 bg-muted/60 text-foreground border-0 cursor-pointer hover:bg-muted transition-colors"
-                  onClick={() => toggleExperience(level)}
-                >
-                  {level} ×
-                </Badge>
-              ))}
             </div>
           </div>
         )}
 
-        {/* Footer */}
         <SheetFooter className="px-5 py-4 border-t border-border/40 shrink-0 flex-row gap-2">
           <Button
             variant="outline"
@@ -359,7 +306,6 @@ export function FilterPanel({ onClose, onApplyFilters }: FilterPanelProps) {
             )}
           </Button>
         </SheetFooter>
-
       </SheetContent>
     </Sheet>
   );

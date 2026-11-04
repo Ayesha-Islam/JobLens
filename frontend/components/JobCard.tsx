@@ -34,6 +34,50 @@ function getDescriptionPreview(raw: string | null | undefined): string {
     .trim();
 }
 
+function HighlightText({
+  text,
+  searchTerms = [],
+}: {
+  text: string;
+  searchTerms?: string[];
+}) {
+  const terms = [...new Set(
+    searchTerms
+      .flatMap((term) => term.trim().split(/\s+/))
+      .filter(Boolean)
+  )];
+
+  if (!terms.length || !text) return <>{text}</>;
+
+  const escapedTerms = terms.map((term) =>
+    term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  );
+
+  const regex = new RegExp(`(${escapedTerms.join('|')})`, 'gi');
+  const parts = text.split(regex);
+
+  return (
+    <>
+      {parts.map((part, index) => {
+        const isMatch = terms.some(
+          (term) => term.toLowerCase() === part.toLowerCase()
+        );
+
+        return isMatch ? (
+          <mark
+            key={index}
+            className="bg-yellow-200 text-yellow-950 dark:bg-yellow-400 dark:text-black rounded-sm px-0.5"
+          >
+            {part}
+          </mark>
+        ) : (
+          part
+        );
+      })}
+    </>
+  );
+}
+
 interface JobCardProps {
   job: Job;
   isSaved?: boolean;
@@ -42,6 +86,7 @@ interface JobCardProps {
   onSave?: () => void;
   onClick: () => void;
   compact?: boolean;
+  searchTerms?: string[];
 }
 
 export function JobCard({
@@ -52,6 +97,7 @@ export function JobCard({
   onSave,
   onClick,
   compact = false,
+  searchTerms = [],
 }: JobCardProps) {
   const descriptionPreview = getDescriptionPreview(job.description);
   const relativeTimeSource = job.postedAt || job.scrapedAt;
@@ -82,8 +128,8 @@ export function JobCard({
           ) : (
             <Bookmark
               className={`w-5 h-5 transition-all ${isSaved
-                  ? 'fill-primary stroke-primary'
-                  : 'stroke-primary hover:fill-primary/50'
+                ? 'fill-primary stroke-primary'
+                : 'stroke-primary hover:fill-primary/50'
                 }`}
             />
           )}
@@ -94,11 +140,12 @@ export function JobCard({
         {!compact && (
           <div className={showSaveButton ? 'pr-12' : ''}>
             <h3 className="font-bold text-lg text-foreground leading-tight mb-1">
-              {job.position}
-            </h3>
+              <HighlightText text={job.position} searchTerms={searchTerms} />            </h3>
             <div className="flex items-center gap-1 text-xs text-foreground">
               <Building2 className="w-4 h-4" />
-              <p>{job.company}</p>
+              <p>
+                <HighlightText text={job.company} searchTerms={searchTerms} />
+              </p>
             </div>
           </div>
         )}
@@ -106,11 +153,11 @@ export function JobCard({
         {compact && (
           <div className={showSaveButton ? 'pr-12' : ''}>
             <h3 className="font-bold text-sm mb-1 line-clamp-2 text-foreground">
-              {job.position}
+              <HighlightText text={job.position} searchTerms={searchTerms} />
             </h3>
             <p className="text-xs text-foreground flex items-center gap-1">
               <Building2 className="w-3 h-3 text-foreground" />
-              {job.company}
+              <HighlightText text={job.company} searchTerms={searchTerms} />
             </p>
           </div>
         )}
@@ -123,21 +170,21 @@ export function JobCard({
               {job.location && (
                 <Badge variant="outline" className="bg-popover border-border text-muted-foreground">
                   <MapPin className="w-3 h-3 mr-1" />
-                  {job.location}
+                  <HighlightText text={job.location} searchTerms={searchTerms} />
                 </Badge>
               )}
 
               {job.type && (
                 <Badge variant="outline" className="bg-popover border-border">
                   <Briefcase className="w-3 h-3 mr-1" />
-                  {formatJobType(job.type)}
+                  <HighlightText text={formatJobType(job.type)} searchTerms={searchTerms} />
                 </Badge>
               )}
 
               {job.salary && (
                 <Badge variant="outline" className="bg-popover border-border">
                   <DollarSign className="w-3 h-3 mr-1" />
-                  {job.salary}
+                  <HighlightText text={job.salary} searchTerms={searchTerms} />
                 </Badge>
               )}
 
@@ -151,7 +198,10 @@ export function JobCard({
 
             {descriptionPreview && (
               <p className="text-sm text-foreground line-clamp-2 leading-relaxed">
-                {descriptionPreview}
+                <HighlightText
+                  text={descriptionPreview}
+                  searchTerms={searchTerms}
+                />
               </p>
             )}
 
@@ -184,7 +234,7 @@ export function JobCard({
           {job.location && (
             <Badge variant="outline" className="bg-popover border-border">
               <MapPin className="w-3 h-3 mr-1" />
-              {job.location}
+              <HighlightText text={job.location} searchTerms={searchTerms} />
             </Badge>
           )}
         </CardContent>
