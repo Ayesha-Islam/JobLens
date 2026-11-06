@@ -1,17 +1,14 @@
 'use client';
 
+import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signIn } from "next-auth/react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { registerUser } from "@/lib/api";
 
 export default function RegisterPage() {
-    const router = useRouter();
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -20,103 +17,128 @@ export default function RegisterPage() {
     });
 
     const [error, setError] = useState<string | null>(null);
+    const [registeredEmail, setRegisteredEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-    };
+    const [success, setSuccess] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
 
-        const fullName = formData.name.trim();
+        const name = formData.name.trim();
         const email = formData.email.trim().toLowerCase();
 
-        if (fullName.split(/\s+/).length < 2) {
-            setError("Please enter your full name, for example Joe Allen.");
+        if (name.split(/\s+/).length < 2) {
+            setError("Please enter your full name.");
             return;
         }
 
         if (formData.password.length < 8) {
-            setError("Password must be at least 8 characters long.");
+            setError("Password must be at least 8 characters.");
             return;
         }
 
         if (formData.password !== formData.confirmPassword) {
-            setError("Passwords do not match");
+            setError("Passwords do not match.");
             return;
         }
 
         setIsLoading(true);
 
         try {
-            const result = await registerUser(
-                email,
-                formData.password,
-                fullName
-            );
+            const result = await registerUser(email, formData.password, name);
 
-            if (result.success) {
-                const loginRes = await signIn("credentials", {
-                    email,
-                    password: formData.password,
-                    redirect: false,
-                });
-
-                if (loginRes?.error) {
-                    setError("Account created, but auto-login failed. Please sign in.");
-                } else {
-                    router.push("/jobs");
-                    router.refresh();
-                }
+            if (!result.success) {
+                setError("Registration failed. Please try again.");
+                return;
             }
-        } catch (err: any) {
-            setError(err.message || "An unexpected error occurred");
+
+            setRegisteredEmail(email);
+            setSuccess(true);
+        } catch (err: unknown) {
+            setError(
+                err instanceof Error ? err.message : "Something went wrong."
+            );
         } finally {
             setIsLoading(false);
         }
     };
+
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background pt-12 text-foreground">
+        <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12 text-foreground">
             <Card className="w-full max-w-md">
                 <CardHeader>
-                    <CardTitle className="text-2xl font-bold">Register</CardTitle>
-                    <CardDescription>Create your account to start searching jobs.</CardDescription>
+                    <CardTitle className="text-2xl font-bold">
+                        {success ? "Check your email" : "Create an account"}
+                    </CardTitle>
+                    <CardDescription>
+                        {success
+                            ? `A verification link has been sent to ${registeredEmail}.`
+                            : "Create your JobLens account to discover remote opportunities."}
+                    </CardDescription>
                 </CardHeader>
-                <form onSubmit={handleSubmit}>
-                    <CardContent className="space-y-4">
-                        {error && (
-                            <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
-                                {error}
-                            </div>
-                        )}
-                        <div className="space-y-2">
-                            <Label htmlFor="name">Full Name</Label>
-                            <Input id="name" name="name" required value={formData.name} onChange={handleChange} disabled={isLoading} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input id="email" name="email" type="email" required value={formData.email} onChange={handleChange} disabled={isLoading} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
-                            <Input id="password" name="password" type="password" required value={formData.password} onChange={handleChange} disabled={isLoading} />
-                        </div>
-                        <div className="space-y-2 mb-4">
-                            <Label htmlFor="confirmPassword">Confirm Password</Label>
-                            <Input id="confirmPassword" name="confirmPassword" type="password" required value={formData.confirmPassword} onChange={handleChange} disabled={isLoading} />
-                        </div>
-                    </CardContent>
-                    <CardFooter className="flex flex-col gap-4">
-                        <Button type="submit" className="w-full" disabled={isLoading}>
-                            {isLoading ? "Processing..." : "Create Account"}
-                        </Button>
-                        <p className="text-sm text-muted-foreground">
-                            Already have an account? <Link href="/login" className="text-primary hover:underline">Sign in</Link>
-                        </p>
-                    </CardFooter>
-                </form>
+
+                {success ? (
+                    <>
+                        <CardContent className="text-sm text-muted-foreground">
+                            Verify your email within 15 minutes to activate your account. Check your Spam folder if you don't see the email.
+                        </CardContent>
+                        <CardFooter>
+                            <Button asChild className="w-full">
+                                <Link href="/login">Go to Sign In</Link>
+                            </Button>
+                        </CardFooter>
+                    </>
+                ) : (
+                    <form onSubmit={handleSubmit}>
+                        <CardContent className="space-y-4">
+                            {error && (
+                                <p role="alert" className="text-sm text-destructive">
+                                    {error}
+                                </p>
+                            )}
+
+                            {([
+                                ["name", "Full Name", "text"],
+                                ["email", "Email", "email"],
+                                ["password", "Password", "password"],
+                                ["confirmPassword", "Confirm Password", "password"],
+                            ] as const).map(([name, label, type]) => (
+                                <div key={name} className="space-y-2">
+                                    <Label htmlFor={name}>{label}</Label>
+                                    <Input
+                                        id={name}
+                                        name={name}
+                                        type={type}
+                                        required
+                                        value={formData[name]}
+                                        onChange={(e) =>
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                [name]: e.target.value,
+                                            }))
+                                        }
+                                        disabled={isLoading}
+                                    />
+                                </div>
+                            ))}
+                        </CardContent>
+
+                        <CardFooter className="flex flex-col gap-4">
+                            <Button type="submit" className="w-full" disabled={isLoading}>
+                                {isLoading ? "Creating account..." : "Create Account"}
+                            </Button>
+
+                            <p className="text-sm text-muted-foreground">
+                                Already have an account?{" "}
+                                <Link href="/login" className="text-primary hover:underline">
+                                    Sign in
+                                </Link>
+                            </p>
+                        </CardFooter>
+                    </form>
+                )}
             </Card>
         </div>
     );

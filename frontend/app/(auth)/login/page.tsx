@@ -29,7 +29,11 @@ export default function LoginPage() {
             });
 
             if (result?.error) {
-                setError("Invalid email or password");
+                setError(
+                    result.code === "email_not_verified"
+                        ? "Please verify your email before logging in."
+                        : "Invalid email or password."
+                );
             } else {
                 router.push("/jobs");
                 router.refresh();

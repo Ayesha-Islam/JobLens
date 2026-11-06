@@ -15,6 +15,10 @@ export interface Env {
   JWT_SECRET: string;
   ADMIN_EMAILS?: string;
   ENABLE_SCHEDULER: boolean;
+  EMAIL_USER: string;
+  EMAIL_APP_PASSWORD: string;
+  EMAIL_FROM: string;
+  FRONTEND_URL: string;
 }
 
 const missing = (key: string): never => {
@@ -33,6 +37,10 @@ export const env: Env = {
   DB_SSL: process.env.DB_SSL,
   JWT_SECRET: process.env.JWT_SECRET ?? missing('JWT_SECRET'),
   ADMIN_EMAILS: process.env.ADMIN_EMAILS,
+  EMAIL_USER: process.env.EMAIL_USER ?? missing('EMAIL_USER'),
+  EMAIL_APP_PASSWORD: process.env.EMAIL_APP_PASSWORD ?? missing('EMAIL_APP_PASSWORD'),
+  EMAIL_FROM: process.env.EMAIL_FROM ?? missing('EMAIL_FROM'),
+  FRONTEND_URL: process.env.FRONTEND_URL ?? missing('FRONTEND_URL'),
 };
 
 const parseNumber = (

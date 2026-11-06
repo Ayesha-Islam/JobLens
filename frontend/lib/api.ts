@@ -67,6 +67,18 @@ export async function registerUser(
   });
 }
 
+type VerifyEmailResponse = {
+  success: boolean;
+  message: string;
+  ticket: string;
+};
+
+export async function verifyEmail(
+  token: string
+): Promise<VerifyEmailResponse> {
+  return fetchAPI(`auth/verify-email?token=${encodeURIComponent(token)}`);
+}
+
 export async function loginUser(
   email: string,
   password: string
@@ -74,6 +86,15 @@ export async function loginUser(
   return fetchAPI('auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function exchangeAuthTicket(
+  ticket: string
+): Promise<LoginResponse> {
+  return fetchAPI('auth/exchange-ticket', {
+    method: 'POST',
+    body: JSON.stringify({ ticket }),
   });
 }
 
