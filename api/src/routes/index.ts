@@ -45,6 +45,8 @@ export function createRoutes(container: Container): Router {
         auth: {
           register: `POST ${API_V1}/auth/register`,
           login: `POST ${API_V1}/auth/login`,
+          forgotPassword: `POST ${API_V1}/auth/forgot-password`,
+          resetPassword: `POST ${API_V1}/auth/reset-password`,
           verifyEmail: `GET ${API_V1}/auth/verify-email`,
           exchangeTicket: `POST ${API_V1}/auth/exchange-ticket`,
           me: `GET ${API_V1}/auth/me`,
@@ -63,9 +65,11 @@ export function createRoutes(container: Container): Router {
 
   router.post(`${API_V1}/auth/register`, authController.register.bind(authController));
   router.post(`${API_V1}/auth/login`, authController.login.bind(authController));
+  router.post(`${API_V1}/auth/forgot-password`, authController.requestPasswordReset.bind(authController));
+  router.post(`${API_V1}/auth/reset-password`, authController.resetPassword.bind(authController));
   router.post(`${API_V1}/auth/exchange-ticket`, authController.exchangeAuthTicket.bind(authController));
   router.get(`${API_V1}/auth/verify-email`, authController.verifyEmail.bind(authController));
-  router.get(`${API_V1}/auth/me`, requireAuth, authController.me.bind(authController));;
+  router.get(`${API_V1}/auth/me`, requireAuth, authController.me.bind(authController));
 
   router.get(`${API_V1}/jobs`, jobController.getJobs.bind(jobController));
   router.get(`${API_V1}/jobs/search`, jobController.searchJobs.bind(jobController));

@@ -98,6 +98,30 @@ export async function exchangeAuthTicket(
   });
 }
 
+type PasswordResetResponse = {
+  success: boolean;
+  message: string;
+};
+
+export async function requestPasswordReset(
+  email: string
+): Promise<PasswordResetResponse> {
+  return fetchAPI('auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPassword(
+  token: string,
+  password: string
+): Promise<PasswordResetResponse> {
+  return fetchAPI('auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, password }),
+  });
+}
+
 export async function getCurrentUser(
   token: string
 ): Promise<ApiResponse<{ id: string; email: string; name: string }>> {

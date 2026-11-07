@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { PrismaClient, Prisma, User } from '@prisma/client';
 import { env } from '../config';
 import crypto from 'crypto';
-import { sendVerificationEmail } from '../services/email.service';
+import { sendVerificationEmail, sendPasswordResetEmail, } from '../services/email.service';
 
 export class AuthController {
   constructor(private db: PrismaClient) { }
@@ -45,34 +45,24 @@ export class AuthController {
           error: 'Password must be at least 8 characters long',
         });
       }
-
-      // Check whether an account already exists.
       const existingUser = await this.db.user.findUnique({
         where: { email: normalizedEmail },
       });
 
-      // Reject registration if the existing account is verified.
       if (existingUser?.emailVerified) {
         return res.status(409).json({
           success: false,
           error: 'User already exists',
         });
       }
-
-      // Generate a new verification token.
       const verificationToken = crypto.randomBytes(32).toString('hex');
-
       const hashedVerificationToken = crypto
         .createHash('sha256')
         .update(verificationToken)
         .digest('hex');
-
       const verificationExpires = new Date(Date.now() + 15 * 60 * 1000);
-
       let user: User;
-
       if (existingUser) {
-        // Existing account is unverified: replace its verification token.
         user = await this.db.user.update({
           where: { id: existingUser.id },
           data: {
@@ -81,9 +71,7 @@ export class AuthController {
           },
         });
       } else {
-        // No existing account: create a new user.
         const hashedPassword = await bcrypt.hash(password, 10);
-
         user = await this.db.user.create({
           data: {
             email: normalizedEmail,
@@ -152,7 +140,6 @@ export class AuthController {
         .update(token)
         .digest('hex');
 
-      // Generate a temporary authentication ticket.
       const authTicket = crypto.randomBytes(32).toString('hex');
 
       const hashedAuthTicket = crypto
@@ -166,7 +153,6 @@ export class AuthController {
         now.getTime() + 2 * 60 * 1000
       );
 
-      // Atomically verify the email and issue the authentication ticket.
       const result = await this.db.user.updateMany({
         where: {
           verificationToken: hashedToken,
@@ -265,6 +251,157 @@ export class AuthController {
     }
   }
 
+  async requestPasswordReset(req: Request, res: Response) {
+    try {
+      const { email } = req.body;
+
+      if (!email || typeof email !== 'string') {
+        return res.status(400).json({
+          success: false,
+          error: 'Please provide a valid email address.',
+        });
+      }
+
+      const normalizedEmail = email.trim().toLowerCase();
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!emailRegex.test(normalizedEmail)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Please provide a valid email address.',
+        });
+      }
+
+      const genericResponse = {
+        success: true,
+        message:
+          'A password reset link has been sent to the provided email address.',
+      };
+
+      const user = await this.db.user.findUnique({
+        where: { email: normalizedEmail },
+      });
+
+      if (!user || !user.emailVerified) {
+        return res.status(200).json(genericResponse);
+      }
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const hashedResetToken = crypto
+        .createHash('sha256')
+        .update(resetToken)
+        .digest('hex');
+
+      const passwordResetExpires = new Date(
+        Date.now() + 15 * 60 * 1000
+      );
+
+      await this.db.user.update({
+        where: { id: user.id },
+        data: {
+          passwordResetToken: hashedResetToken,
+          passwordResetExpires,
+        },
+      });
+
+      const resetUrl =
+        `${env.FRONTEND_URL.replace(/\/$/, '')}/reset-password?token=${resetToken}`;
+
+      try {
+        await sendPasswordResetEmail(normalizedEmail, resetUrl);
+      } catch (emailError) {
+        console.error('Password Reset Email Error:', emailError);
+        await this.db.user.updateMany({
+          where: {
+            id: user.id,
+            passwordResetToken: hashedResetToken,
+          },
+          data: {
+            passwordResetToken: null,
+            passwordResetExpires: null,
+          },
+        });
+      }
+      return res.status(200).json(genericResponse);
+    } catch (error) {
+      console.error('Password Reset Request Error:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+      });
+    }
+  }
+  async resetPassword(req: Request, res: Response) {
+    try {
+      const { token, password } = req.body;
+
+      if (
+        !token ||
+        typeof token !== 'string' ||
+        !password ||
+        typeof password !== 'string'
+      ) {
+        return res.status(400).json({
+          success: false,
+          error: 'Reset token and new password are required.',
+        });
+      }
+
+      if (password.length < 8) {
+        return res.status(400).json({
+          success: false,
+          error: 'Password must be at least 8 characters long.',
+        });
+      }
+
+      const hashedResetToken = crypto
+        .createHash('sha256')
+        .update(token)
+        .digest('hex');
+
+      const now = new Date();
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const result = await this.db.user.updateMany({
+        where: {
+          passwordResetToken: hashedResetToken,
+          passwordResetExpires: {
+            gt: now,
+          },
+          emailVerified: {
+            not: null,
+          },
+        },
+        data: {
+          password: hashedPassword,
+          passwordResetToken: null,
+          passwordResetExpires: null,
+          authTicket: null,
+          authTicketExpires: null,
+        },
+      });
+
+      if (result.count !== 1) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid or expired password reset link.',
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Your password has been reset successfully. You can now sign in.',
+      });
+
+    } catch (error) {
+      console.error('Password Reset Error:', error);
+
+      return res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+      });
+    }
+  }
+
   async exchangeAuthTicket(req: Request, res: Response) {
     try {
       const { ticket } = req.body;
@@ -276,7 +413,6 @@ export class AuthController {
         });
       }
 
-      // Hash the ticket before looking it up.
       const hashedTicket = crypto
         .createHash('sha256')
         .update(ticket)
@@ -284,7 +420,6 @@ export class AuthController {
 
       const now = new Date();
 
-      // Find the user associated with this ticket.
       const user = await this.db.user.findUnique({
         where: {
           authTicket: hashedTicket,
@@ -298,7 +433,6 @@ export class AuthController {
         });
       }
 
-      // Atomically consume the ticket so it cannot be reused.
       const result = await this.db.user.updateMany({
         where: {
           id: user.id,
@@ -323,7 +457,6 @@ export class AuthController {
         });
       }
 
-      // Issue the same JWT used by normal login.
       const token = jwt.sign(
         { id: user.id, email: user.email },
         env.JWT_SECRET,
