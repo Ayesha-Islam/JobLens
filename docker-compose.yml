@@ -14,9 +14,12 @@ services:
       PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       ADMIN_EMAILS: ${ADMIN_EMAILS:?ADMIN_EMAILS must be set}
-      # Must match the exact origin used in the browser (CORS)
-      FRONTEND_URL: https://job-lens-gules.vercel.app/
+      # Must match the exact public origin used in the browser and password-reset links
+      FRONTEND_URL: ${FRONTEND_URL:?FRONTEND_URL must be set}
       DB_SSL: ${DB_SSL:-false}
+      EMAIL_USER: ${EMAIL_USER:?EMAIL_USER must be set}
+      EMAIL_APP_PASSWORD: ${EMAIL_APP_PASSWORD:?EMAIL_APP_PASSWORD must be set}
+      EMAIL_FROM: ${EMAIL_FROM:?EMAIL_FROM must be set}
     ports:
       - "3001:3001"
   frontend:
@@ -26,7 +29,7 @@ services:
       dockerfile: Dockerfile
       args:
         # Baked into the client bundle at build time: rebuild after changing HOST_IP
-        NEXT_PUBLIC_API_URL: http://${HOST_IP:-localhost}:3001/api/v1
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL must be set}
     container_name: joblens-frontend
     restart: unless-stopped
     environment:
@@ -34,11 +37,11 @@ services:
       PORT: 3000
       AUTH_TRUST_HOST: "true"
       # Auth.js v5 reads AUTH_URL; NextAuth v4 reads NEXTAUTH_URL
-      AUTH_URL: https://job-lens-gules.vercel.app/
-      NEXTAUTH_URL: https://job-lens-gules.vercel.app/
-      NEXT_PUBLIC_API_URL: http://${HOST_IP:-localhost}:3001/api/v1
+      AUTH_URL: ${NEXTAUTH_URL:?NEXTAUTH_URL must be set}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:?NEXTAUTH_URL must be set}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL must be set}
       # Container-to-container traffic: always the service name, never HOST_IP
-      INTERNAL_API_URL: http://api:3001/api/v1
+      INTERNAL_API_URL: ${INTERNAL_API_URL:?INTERNAL_API_URL must be set}
       AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET must be set}
       NEXTAUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET must be set}
     ports:

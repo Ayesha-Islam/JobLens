@@ -31,7 +31,7 @@ Replace every secret placeholder. Do not commit any populated `.env` file.
 | --- | --- | --- | --- |
 | `NODE_ENV` | No | `development` | `development`, `production`, or `test`. |
 | `PORT` | No | `3001` | Express API port. |
-| `FRONTEND_URL` | No | `http://localhost:3000` in production CORS configuration | Allowed production frontend origin. |
+| `FRONTEND_URL` | Yes | — | Public frontend origin used for production CORS and verification/password-reset links. |
 
 ### Administrative authorization
 
