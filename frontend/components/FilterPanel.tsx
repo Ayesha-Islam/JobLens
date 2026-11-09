@@ -1,4 +1,6 @@
-import { useState } from 'react';
+'use client';
+
+import { useState, type ReactNode } from 'react';
 import { JobType } from '@/types';
 import {
   Sheet,
@@ -52,11 +54,11 @@ type SectionKey = 'jobType' | 'search' | 'location';
 interface AccordionSectionProps {
   id: SectionKey;
   label: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   count?: number;
   isOpen: boolean;
   onToggle: (id: SectionKey) => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 function AccordionSection({
@@ -73,9 +75,10 @@ function AccordionSection({
       <button
         type="button"
         onClick={() => onToggle(id)}
-        className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-muted/30 transition-colors text-left group"
+        aria-expanded={isOpen}
+        className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-muted/30 transition-colors"
       >
-        <span className="flex items-center gap-2.5 text-sm text-foreground">
+        <span className="flex items-center gap-3 text-sm font-medium text-foreground">
           <span className="text-muted-foreground">{icon}</span>
           {label}
         </span>
@@ -83,28 +86,31 @@ function AccordionSection({
           {count !== undefined && count > 0 && (
             <Badge
               variant="secondary"
-              className="h-4 min-w-4 px-1.5 text-[10px] font-medium bg-primary/10 text-primary border-0 rounded-full"
+              className="h-5 min-w-5 px-1.5 text-[10px] font-medium bg-primary/10 text-primary border-0 rounded-full"
             >
               {count}
             </Badge>
           )}
           <ChevronDown
             className={cn(
-              'h-3.5 w-3.5 text-muted-foreground transition-transform duration-200',
+              'h-4 w-4 text-muted-foreground transition-transform duration-200',
               isOpen && 'rotate-180'
             )}
           />
         </span>
       </button>
-
       <div
         className={cn(
-          'overflow-hidden transition-all duration-200',
-          isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          'grid transition-all duration-200',
+          isOpen
+            ? 'grid-rows-[1fr] opacity-100'
+            : 'grid-rows-[0fr] opacity-0'
         )}
       >
-        <div className="px-5 pb-4 pt-1 bg-muted/10 space-y-2.5">
-          {children}
+        <div className="overflow-hidden">
+          <div className="px-5 pb-5 pt-1 bg-muted/10 space-y-3">
+            {children}
+          </div>
         </div>
       </div>
     </div>
@@ -116,38 +122,36 @@ export function FilterPanel({
   onApplyFilters,
   initialFilters = EMPTY_FILTERS,
 }: FilterPanelProps) {
-  const [filters, setFilters] = useState<FilterOptions>(initialFilters);
+  const [filters, setFilters] = useState<FilterOptions>(() => ({
+    ...initialFilters,
+    jobTypes: [...initialFilters.jobTypes],
+  }));
+
   const [openSections, setOpenSections] = useState<Set<SectionKey>>(
     new Set(['jobType', 'search', 'location'])
   );
 
-  const toggleSection = (id: SectionKey) =>
+  const toggleSection = (id: SectionKey) => {
     setOpenSections(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+
       return next;
     });
+  };
 
-  const toggleJobType = (type: JobType) =>
+  const toggleJobType = (type: JobType) => {
     setFilters(prev => ({
       ...prev,
       jobTypes: prev.jobTypes.includes(type)
         ? prev.jobTypes.filter(t => t !== type)
         : [...prev.jobTypes, type],
     }));
-
-  const handleApply = () => {
-    onApplyFilters({
-      ...filters,
-      search: filters.search.trim(),
-      location: filters.location.trim(),
-    });
-    onClose();
-  };
-
-  const handleReset = () => {
-    setFilters(EMPTY_FILTERS);
-    onApplyFilters(EMPTY_FILTERS);
   };
 
   const activeFilterCount =
@@ -155,12 +159,73 @@ export function FilterPanel({
     (filters.search.trim() ? 1 : 0) +
     (filters.location.trim() ? 1 : 0);
 
+  const handleApply = () => {
+    onApplyFilters({
+      ...filters,
+      jobTypes: [...filters.jobTypes],
+      search: filters.search.trim(),
+      location: filters.location.trim(),
+    });
+
+    onClose();
+  };
+
+  const handleReset = () => {
+    const resetFilters = {
+      ...EMPTY_FILTERS,
+      jobTypes: [],
+    };
+
+    setFilters(resetFilters);
+    onApplyFilters(resetFilters);
+  };
+
   return (
-    <Sheet open={true} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-xs flex flex-col p-0 overflow-hidden bg-background border-border text-foreground">
-        <SheetHeader className="px-5 pt-5 pb-4 border-b border-border/40 shrink-0">
+    <Sheet
+      open={true}
+      onOpenChange={open => {
+        if (!open) onClose();
+      }}
+    >
+      <SheetContent
+        side="right"
+        className="
+          z-[70]
+          w-full
+          sm:max-w-xs
+          flex
+          flex-col
+          p-0
+          overflow-hidden
+          bg-background
+          border-border
+          text-foreground
+
+          max-sm:!fixed
+          max-sm:!inset-x-0
+          max-sm:!inset-y-auto
+          max-sm:!bottom-0
+          max-sm:!right-auto
+          max-sm:!w-full
+          max-sm:!max-w-none
+          max-sm:!h-[88dvh]
+          max-sm:!max-h-[88dvh]
+          max-sm:!translate-x-0
+          max-sm:!translate-y-0
+          max-sm:!rounded-t-2xl
+          max-sm:!rounded-b-none
+          max-sm:border-l-0
+          max-sm:border-t
+          max-sm:pb-[env(safe-area-inset-bottom)]
+        "
+      >
+        <div className="sm:hidden flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+        </div>
+
+        <SheetHeader className="px-5 pt-4 pb-4 border-b border-border/40 shrink-0 text-left">
           <div className="flex items-center justify-between">
-            <SheetTitle className="flex items-center gap-2 text-base font-medium text-foreground">
+            <SheetTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
               <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
               Filters
               {activeFilterCount > 0 && (
@@ -173,33 +238,33 @@ export function FilterPanel({
               <button
                 type="button"
                 onClick={handleReset}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 Reset all
               </button>
             )}
           </div>
-          <SheetDescription className="text-xs text-muted-foreground mt-0.5">
-            Refine your job search with these filters
+          <SheetDescription className="text-xs text-muted-foreground mt-1">
+            Refine your job search with these filters.
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto divide-y-0">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
           <AccordionSection
             id="jobType"
             label="Job type"
-            icon={<Briefcase className="h-3.5 w-3.5" />}
+            icon={<Briefcase className="h-4 w-4" />}
             count={filters.jobTypes.length}
             isOpen={openSections.has('jobType')}
             onToggle={toggleSection}
           >
             {JOB_TYPES.map(({ value, label }) => (
-              <div key={value} className="flex items-center gap-2.5">
+              <div key={value} className="flex items-center gap-3 min-h-8">
                 <Checkbox
                   id={`jt-${value}`}
                   checked={filters.jobTypes.includes(value)}
                   onCheckedChange={() => toggleJobType(value)}
-                  className="h-3.5 w-3.5 rounded border-border/60 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  className="h-4 w-4 rounded border-border/60 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
                 <Label
                   htmlFor={`jt-${value}`}
@@ -210,11 +275,10 @@ export function FilterPanel({
               </div>
             ))}
           </AccordionSection>
-
           <AccordionSection
             id="search"
             label="Search"
-            icon={<Search className="h-3.5 w-3.5" />}
+            icon={<Search className="h-4 w-4" />}
             count={filters.search.trim() ? 1 : 0}
             isOpen={openSections.has('search')}
             onToggle={toggleSection}
@@ -222,18 +286,20 @@ export function FilterPanel({
             <Input
               value={filters.search}
               onChange={event =>
-                setFilters(prev => ({ ...prev, search: event.target.value }))
+                setFilters(prev => ({
+                  ...prev,
+                  search: event.target.value,
+                }))
               }
               placeholder="Job title, company, or keyword"
               aria-label="Search jobs"
-              className="h-9 text-sm"
+              className="h-10 text-sm bg-background"
             />
           </AccordionSection>
-
           <AccordionSection
             id="location"
             label="Location"
-            icon={<MapPin className="h-3.5 w-3.5" />}
+            icon={<MapPin className="h-4 w-4" />}
             count={filters.location.trim() ? 1 : 0}
             isOpen={openSections.has('location')}
             onToggle={toggleSection}
@@ -241,36 +307,41 @@ export function FilterPanel({
             <Input
               value={filters.location}
               onChange={event =>
-                setFilters(prev => ({ ...prev, location: event.target.value }))
+                setFilters(prev => ({
+                  ...prev,
+                  location: event.target.value,
+                }))
               }
               placeholder="Country, city, or region"
               aria-label="Filter by location"
-              className="h-9 text-sm"
+              className="h-10 text-sm bg-background"
             />
           </AccordionSection>
         </div>
 
         {activeFilterCount > 0 && (
           <div className="px-5 py-3 border-t border-border/40 shrink-0">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 font-medium">
-              Active
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 font-semibold">
+              Active filters
             </p>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1.5 max-h-16 overflow-y-auto">
               {filters.jobTypes.map(type => (
                 <Badge
                   key={type}
                   variant="secondary"
-                  className="text-[11px] px-2 py-0.5 bg-muted/60 text-foreground border-0 cursor-pointer hover:bg-muted transition-colors"
                   onClick={() => toggleJobType(type)}
+                  className="text-[11px] px-2 py-1 bg-muted/60 text-foreground border-0 cursor-pointer hover:bg-muted"
                 >
-                  {JOB_TYPES.find(jobType => jobType.value === type)?.label} ×
+                  {JOB_TYPES.find(item => item.value === type)?.label} ×
                 </Badge>
               ))}
               {filters.search.trim() && (
                 <Badge
                   variant="secondary"
-                  className="text-[11px] px-2 py-0.5 bg-muted/60 text-foreground border-0 cursor-pointer hover:bg-muted transition-colors"
-                  onClick={() => setFilters(prev => ({ ...prev, search: '' }))}
+                  onClick={() =>
+                    setFilters(prev => ({ ...prev, search: '' }))
+                  }
+                  className="text-[11px] px-2 py-1 bg-muted/60 text-foreground border-0 cursor-pointer hover:bg-muted"
                 >
                   Search: {filters.search.trim()} ×
                 </Badge>
@@ -278,8 +349,10 @@ export function FilterPanel({
               {filters.location.trim() && (
                 <Badge
                   variant="secondary"
-                  className="text-[11px] px-2 py-0.5 bg-muted/60 text-foreground border-0 cursor-pointer hover:bg-muted transition-colors"
-                  onClick={() => setFilters(prev => ({ ...prev, location: '' }))}
+                  onClick={() =>
+                    setFilters(prev => ({ ...prev, location: '' }))
+                  }
+                  className="text-[11px] px-2 py-1 bg-muted/60 text-foreground border-0 cursor-pointer hover:bg-muted"
                 >
                   Location: {filters.location.trim()} ×
                 </Badge>
@@ -288,21 +361,34 @@ export function FilterPanel({
           </div>
         )}
 
-        <SheetFooter className="px-5 py-4 border-t border-border/40 shrink-0 flex-row gap-2">
+        <SheetFooter
+          className="
+            px-5
+            py-4
+            border-t
+            border-border/40
+            shrink-0
+            flex-row
+            gap-3
+            bg-background
+          "
+        >
           <Button
             variant="outline"
             onClick={handleReset}
-            className="flex-1 h-9 text-sm bg-transparent border-border/60 text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-colors"
+            className="flex-1 h-11 text-sm bg-transparent border-border/60 text-muted-foreground hover:bg-muted/30 hover:text-foreground"
           >
-            Reset all
+            Reset
           </Button>
           <Button
             onClick={handleApply}
-            className="flex-1 h-9 text-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            className="flex-1 h-11 text-sm bg-primary text-primary-foreground hover:bg-primary/90"
           >
             Apply filters
             {activeFilterCount > 0 && (
-              <span className="ml-1.5 opacity-75">({activeFilterCount})</span>
+              <span className="ml-1.5 opacity-75">
+                ({activeFilterCount})
+              </span>
             )}
           </Button>
         </SheetFooter>

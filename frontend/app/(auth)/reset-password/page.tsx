@@ -1,10 +1,9 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
-
 import {
     Card,
     CardContent,
@@ -17,50 +16,49 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { resetPassword } from "@/lib/api";
-
+import { signIn } from "next-auth/react";
 function ResetPasswordForm() {
     const searchParams = useSearchParams();
-
+    const router = useRouter();
     const token = searchParams.get("token");
-
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         setError("");
         setSuccess("");
-
         if (!token) {
             setError("Invalid password reset link. Please request a new one.");
             return;
         }
-
         if (password.length < 8) {
             setError("Password must be at least 8 characters long.");
             return;
         }
-
         if (password !== confirmPassword) {
             setError("Passwords do not match.");
             return;
         }
-
         setIsLoading(true);
-
         try {
             const response = await resetPassword(token, password);
-
-            setSuccess(response.message);
-            setPassword("");
-            setConfirmPassword("");
+            if (!response.ticket) {
+                throw new Error("Password reset succeeded, but automatic sign-in failed. Please sign in manually.");
+            }
+            const result = await signIn("credentials", {
+                ticket: response.ticket,
+                redirect: false,
+            });
+            if (result?.error) {
+                throw new Error("Password reset succeeded, but automatic sign-in failed. Please sign in manually.");
+            }
+            router.replace("/jobs");
+            router.refresh();
         } catch (error) {
             setError(
                 error instanceof Error
@@ -79,12 +77,10 @@ function ResetPasswordForm() {
                     <CardTitle className="text-2xl font-bold">
                         Reset Password
                     </CardTitle>
-
                     <CardDescription>
                         Choose a new password for your JobLens account.
                     </CardDescription>
                 </CardHeader>
-
                 <form onSubmit={handleSubmit}>
                     <CardContent className="space-y-4 py-4">
                         {error && (
@@ -92,22 +88,18 @@ function ResetPasswordForm() {
                                 {error}
                             </div>
                         )}
-
                         {success && (
                             <div className="bg-green-500/10 text-green-600 p-3 rounded-md text-sm">
                                 {success}
                             </div>
                         )}
-
                         {!token && (
                             <div className="text-sm text-muted-foreground">
                                 This link does not contain a reset token.
                             </div>
                         )}
-
                         <div className="space-y-2">
                             <Label htmlFor="password">New Password</Label>
-
                             <div className="relative">
                                 <Input
                                     id="password"
@@ -120,7 +112,6 @@ function ResetPasswordForm() {
                                     disabled={isLoading || !!success || !token}
                                     className="pr-10"
                                 />
-
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword((prev) => !prev)}
@@ -132,12 +123,10 @@ function ResetPasswordForm() {
                                 </button>
                             </div>
                         </div>
-
                         <div className="space-y-2">
                             <Label htmlFor="confirmPassword">
                                 Confirm New Password
                             </Label>
-
                             <div className="relative">
                                 <Input
                                     id="confirmPassword"
@@ -150,7 +139,6 @@ function ResetPasswordForm() {
                                     disabled={isLoading || !!success || !token}
                                     className="pr-10"
                                 />
-
                                 <button
                                     type="button"
                                     onClick={() =>
@@ -173,7 +161,6 @@ function ResetPasswordForm() {
                             </div>
                         </div>
                     </CardContent>
-
                     <CardFooter className="flex flex-col space-y-4">
                         <Button
                             type="submit"
@@ -182,7 +169,6 @@ function ResetPasswordForm() {
                         >
                             {isLoading ? "Resetting..." : "Reset Password"}
                         </Button>
-
                         {success ? (
                             <Link
                                 href="/login"

@@ -101,6 +101,7 @@ export async function exchangeAuthTicket(
 type PasswordResetResponse = {
   success: boolean;
   message: string;
+  ticket: string;
 };
 
 export async function requestPasswordReset(

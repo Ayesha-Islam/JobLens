@@ -37,7 +37,6 @@ interface BrowseJobsProps {
   showFilters: boolean;
   onToggleFilters: () => void;
 }
-
 export function BrowseJobs({
   jobs: initialJobs,
   initialTotalJobs,
@@ -51,48 +50,37 @@ export function BrowseJobs({
 }: BrowseJobsProps) {
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [locationQuery, setLocationQuery] = useState('');
-
   const [viewMode, setViewMode] = useState<'grid' | 'masonry'>('grid');
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-
   const [filters, setFilters] = useState<FilterOptions>({
     jobTypes: [],
     search: '',
     location: '',
   });
-
   const [jobs, setJobs] = useState<Job[]>(initialJobs);
   const [loading, setLoading] = useState(false);
-
   const [currentPage, setCurrentPage] = useState(initialPage || 1);
-
   const [totalPages, setTotalPages] = useState(
     initialTotalPages ?? Math.max(1, Math.ceil((initialJobs?.length || 0) / 50))
   );
-
   const [totalJobs, setTotalJobs] = useState(
     initialTotalJobs ?? (initialJobs?.length || 0)
   );
-
   // Prevent the initial render from triggering an unnecessary debounce request.
   const isInitialSearchRender = useRef(true);
-
   // Prevent duplicate requests when applying or clearing drawer filters.
   const skipNextDebounce = useRef(false);
-
   const fetchFilteredJobs = async (
     page: number = 1,
     filterOverrides?: FilterOptions
   ) => {
     try {
       setLoading(true);
-
       const activeFilters = filterOverrides ?? {
         ...filters,
         search: searchQuery,
         location: locationQuery,
       };
-
       const response = await getJobs({
         page,
         limit: 50,
@@ -100,7 +88,6 @@ export function BrowseJobs({
         location: activeFilters.location.trim() || undefined,
         type: activeFilters.jobTypes[0] || undefined,
       });
-
       if (response.success && response.data) {
         setJobs(response.data.data);
         setCurrentPage(response.data.pagination.page);
@@ -113,17 +100,13 @@ export function BrowseJobs({
       setLoading(false);
     }
   };
-
   // Initialize jobs and pagination.
   useEffect(() => {
     if (initialJobs && initialJobs.length > 0) {
       setJobs(initialJobs);
-
       const limit = 50;
-
       setTotalJobs(initialTotalJobs ?? initialJobs.length);
       setCurrentPage(initialPage ?? 1);
-
       setTotalPages(
         initialTotalPages ?? Math.max(1, Math.ceil(initialJobs.length / limit))
       );
@@ -136,19 +119,16 @@ export function BrowseJobs({
     initialPage,
     initialTotalPages
   ]);
-
   // Debounce search and location changes.
   useEffect(() => {
     if (isInitialSearchRender.current) {
       isInitialSearchRender.current = false;
       return;
     }
-
     if (skipNextDebounce.current) {
       skipNextDebounce.current = false;
       return;
     }
-
     const timer = setTimeout(() => {
       fetchFilteredJobs(1, {
         ...filters,
@@ -156,43 +136,31 @@ export function BrowseJobs({
         location: locationQuery,
       });
     }, 500);
-
     return () => clearTimeout(timer);
   }, [searchQuery, locationQuery]);
-
-
   const filteredJobs = jobs || [];
   const handleApplyFilters = (newFilters: FilterOptions) => {
     skipNextDebounce.current =
       searchQuery !== newFilters.search ||
       locationQuery !== newFilters.location;
-
     setFilters(newFilters);
     setSearchQuery(newFilters.search);
     setLocationQuery(newFilters.location);
-
     fetchFilteredJobs(1, newFilters);
   };
-
-  // Clear all filters and search criteria.
   const handleClearFilters = () => {
     const emptyFilters: FilterOptions = {
       jobTypes: [],
       search: '',
       location: '',
     };
-
     skipNextDebounce.current =
       searchQuery !== '' || locationQuery !== '';
-
     setFilters(emptyFilters);
     setSearchQuery('');
     setLocationQuery('');
-
     fetchFilteredJobs(1, emptyFilters);
   };
-
-  // Pagination.
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       fetchFilteredJobs(newPage, {
@@ -200,7 +168,6 @@ export function BrowseJobs({
         search: searchQuery,
         location: locationQuery,
       });
-
       window.scrollTo({
         top: 0,
         behavior: 'smooth'
@@ -210,34 +177,22 @@ export function BrowseJobs({
 
   return (
     <div className="min-h-screen bg-background pt-24">
-      <div className="mx-auto max-w-7xl p-8">
-        <div className="px-6 py-6">
+      <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+        <div className="px-0 py-6 sm:px-2 lg:px-6">
           <div className="text-center mb-6">
             <h1 className="text-6xl text-foreground font-bold mb-2">
               Browse All Jobs
             </h1>
-
             <p className="text-sm text-foreground">
               Explore opportunities that align with your career goals.
             </p>
-
-            {totalJobs > 0 && (
-              <Badge
-                variant="secondary"
-                className="mt-2 bg-card text-foreground hover:bg-primary"
-              >
-                {jobs.length} of {totalJobs} jobs
-              </Badge>
-            )}
           </div>
-
           <Card className="transition-colors border-none shadow-none bg-card">
             <CardContent>
-              <div className="flex items-center justify-center gap-3 pt-4">
-                <div className="flex-1 flex items-center gap-3 bg-background border border-border shadow-sm hover:shadow-md transition-shadow py-1.5 px-2 rounded-md">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-center gap-3 pt-4">
+                <div className="w-full flex flex-col sm:flex-row sm:items-center gap-3 bg-background border border-border shadow-sm hover:shadow-md transition-shadow py-2 px-2 rounded-md lg:flex-1">
                   <div className="flex items-center flex-1 group">
                     <Search className="w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors ml-1" />
-
                     <Input
                       type="text"
                       value={searchQuery}
@@ -253,7 +208,6 @@ export function BrowseJobs({
                   </div>
                   <div className="flex items-center flex-1 group">
                     <MapPin className="w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors ml-1" />
-
                     <Input
                       type="text"
                       value={locationQuery}
@@ -276,19 +230,19 @@ export function BrowseJobs({
                   </Button>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex w-full gap-2 lg:w-auto">
                   <Button
                     variant="outline"
                     size="icon"
                     onClick={onToggleFilters}
-                    className={`h-11 w-11 hover:bg-accent ${showFilters
+                    className={`h-11 w-full flex-1 gap-2 lg:w-11 lg:flex-none hover:bg-accent ${showFilters
                       ? 'bg-background text-foreground border-primary'
                       : ''
                       }`}
                   >
-                    <SlidersHorizontal className="h-4 w-4" />
+                    <SlidersHorizontal className="h-4 w-4 shrink-0" />
+                    <span className="lg:hidden">Filter</span>
                   </Button>
-
                   <Button
                     variant="outline"
                     size="icon"
@@ -297,13 +251,14 @@ export function BrowseJobs({
                         current === 'grid' ? 'masonry' : 'grid'
                       )
                     }
-                    className="h-11 w-11 bg-background text-foreground hover:bg-primary hover:text-background transition-colors"
+                    className="h-11 w-full flex-1 gap-2 lg:w-11 lg:flex-none bg-background text-foreground hover:bg-primary hover:text-background transition-colors"
                   >
                     {viewMode === 'grid' ? (
-                      <LayoutGrid className="h-4 w-4" />
+                      <LayoutGrid className="h-4 w-4 shrink-0" />
                     ) : (
-                      <Grid3x3 className="h-4 w-4" />
+                      <Grid3x3 className="h-4 w-4 shrink-0" />
                     )}
+                    <span className="lg:hidden">Grid</span>
                   </Button>
                 </div>
               </div>
@@ -311,7 +266,6 @@ export function BrowseJobs({
           </Card>
         </div>
 
-        {/* Filter panel */}
         {showFilters && (
           <FilterPanel
             onClose={onToggleFilters}
@@ -323,8 +277,6 @@ export function BrowseJobs({
             }}
           />
         )}
-
-        {/* Job details modal */}
         {selectedJob && (
           <JobDetailModal
             job={selectedJob}
@@ -334,8 +286,20 @@ export function BrowseJobs({
           />
         )}
 
-        <main className="px-6 py-8">
-          {/* Loading skeletons */}
+        <main className="px-0 py-6 sm:px-2 lg:px-6 lg:py-8">
+          <div className="flex flex-row items-center justify-between gap-2 mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground whitespace-nowrap">
+              Available Jobs
+            </h2>
+            {totalJobs > 0 && (
+              <Badge
+                variant="secondary"
+                className="shrink-0 bg-card text-foreground hover:bg-primary hover:text-background"
+              >
+                {jobs.length} of {totalJobs} jobs
+              </Badge>
+            )}
+          </div>
           {loading && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[...Array(6)].map((_, i) => (
@@ -345,7 +309,6 @@ export function BrowseJobs({
                       <Skeleton className="h-4 w-3/4" />
                       <Skeleton className="h-4 w-1/2" />
                       <Skeleton className="h-20 w-full" />
-
                       <div className="flex gap-2">
                         <Skeleton className="h-6 w-16" />
                         <Skeleton className="h-6 w-20" />
@@ -359,7 +322,6 @@ export function BrowseJobs({
 
           {!loading && (
             <>
-              {/* Grid view */}
               {viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {filteredJobs.map((job) => (
@@ -374,7 +336,6 @@ export function BrowseJobs({
                   ))}
                 </div>
               ) : (
-                /* Masonry view */
                 <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
                   {filteredJobs.map((job) => (
                     <div key={job.id} className="break-inside-avoid">
@@ -391,22 +352,18 @@ export function BrowseJobs({
                 </div>
               )}
 
-              {/* No jobs found */}
               {filteredJobs.length === 0 && (
                 <Card className="mt-12 border-2 border-border">
                   <CardContent className="p-12 text-center">
                     <div className="mx-auto w-16 h-16 mb-4 rounded-full bg-muted flex items-center justify-center">
                       <Search className="h-8 w-8 text-muted-foreground" />
                     </div>
-
                     <h3 className="text-lg font-semibold mb-2">
                       No jobs found
                     </h3>
-
                     <p className="text-muted-foreground mb-4">
                       Try adjusting your search criteria or filters
                     </p>
-
                     <Button
                       variant="outline"
                       onClick={handleClearFilters}
@@ -418,11 +375,9 @@ export function BrowseJobs({
                 </Card>
               )}
 
-              {/* Pagination */}
               {totalPages > 1 && (
                 <div className="mt-12">
                   <Separator className="mb-6" />
-
                   <div className="flex justify-center items-center gap-2">
                     <Button
                       variant="outline"
@@ -433,13 +388,11 @@ export function BrowseJobs({
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
-
                     <div className="flex items-center gap-1">
                       {Array.from(
                         { length: Math.min(5, totalPages) },
                         (_, i) => {
                           let pageNum;
-
                           if (totalPages <= 5) {
                             pageNum = i + 1;
                           } else if (currentPage <= 3) {
@@ -449,7 +402,6 @@ export function BrowseJobs({
                           } else {
                             pageNum = currentPage - 2 + i;
                           }
-
                           return (
                             <Button
                               key={pageNum}
@@ -471,7 +423,6 @@ export function BrowseJobs({
                         }
                       )}
                     </div>
-
                     <Button
                       variant="outline"
                       size="icon"
@@ -482,7 +433,6 @@ export function BrowseJobs({
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
-
                   <p className="text-center text-foreground text-sm mt-4">
                     Page {currentPage} of {totalPages}
                   </p>

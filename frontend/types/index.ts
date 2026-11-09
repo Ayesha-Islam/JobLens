@@ -27,7 +27,7 @@ export interface ApiResponse<T> {
 
 export interface PaginatedResponse<T> {
   data: T[];
-  job:Job[]; 
+  job: Job[];
   pagination: {
     page: number;
     limit: number;
@@ -39,6 +39,7 @@ export interface PaginatedResponse<T> {
 export interface Stats {
   total: number;
   addedToday: number;
+  uniqueCompanies: number;
   bySource: { source: string; count: number }[];
   byType: { type: string; count: number }[];
 }
